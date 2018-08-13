@@ -47,6 +47,7 @@ const dealChannelValues = {
   5: 'PREF',
   6: 'PMPG'
 };
+const PUBMATIC_DIGITRUST_KEY = 'nFIn8aLzbd';
 
 let publisherId = 0;
 
@@ -275,6 +276,33 @@ function _createImpressionObject(bid, conf) {
   return impObj;
 }
 
+function _handleDigitrustId(eids) {
+  let digiTrustId = utils.getDigiTrustId(PUBMATIC_DIGITRUST_KEY);
+  if (digiTrustId !== null) {
+    eids.push({
+      'source': 'digitru.st',
+      'uids': [
+        {
+          'id': digiTrustId.id || '',
+          'atype': 1,
+          'ext': {
+            'keyv': digiTrustId.keyv || ''
+          }
+        }
+      ]
+    });
+  }
+}
+
+function _handleEids(payload) {
+  let eids = [];
+  _handleDigitrustId(eids);
+  if (eids.length > 0) {
+    // todo: are we sure we have to send this data at user.eids or user.ext.each_eid_solution_object?
+    payload.user.eids = eids;
+  }
+}
+
 export const spec = {
   code: BIDDER_CODE,
   supportedMediaTypes: [BANNER, VIDEO],
@@ -411,6 +439,8 @@ export const spec = {
     } else {
       utils.logWarn(BIDDER_CODE + ': dctr value not found in 1st adunit, ignoring values from subsequent adunits');
     }
+
+    _handleEids(payload);
 
     return {
       method: 'POST',
