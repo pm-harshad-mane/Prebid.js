@@ -293,6 +293,7 @@ function _handleDigitrustId(eids) {
     });
   }
 }
+//todo: add simple test cases, utils.getDigiTrustId responded with object and utils.getDigiTrustId responded null
 
 function _handleEids(payload) {
   let eids = [];
