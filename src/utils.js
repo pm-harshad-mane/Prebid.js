@@ -1126,3 +1126,22 @@ export function convertTypes(types, params) {
   });
   return params;
 }
+
+/**
+ * Try to get Digitrust Id returns null if not found.
+ * @param {string} key The partner key
+ */
+export function getDigiTrustId(key) {
+  function getDigiTrustId() {
+    let digiTrustUser = window.DigiTrust && (config.getConfig('digiTrustId') || window.DigiTrust.getUser({member: key}));
+    return (digiTrustUser && digiTrustUser.success && digiTrustUser.identity) || null;
+  }
+
+  let digiTrustId = getDigiTrustId();
+  // Verify there is an ID and this user has not opted out
+  if (!digiTrustId || (digiTrustId.privacy && digiTrustId.privacy.optout)) {
+    return null;
+  }
+
+  return digiTrustId;
+}
