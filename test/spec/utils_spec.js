@@ -1,5 +1,6 @@
 import { getAdServerTargeting } from 'test/fixtures/fixtures';
 import { expect } from 'chai';
+import {config} from 'src/config';
 
 var assert = require('assert');
 var utils = require('src/utils');
@@ -843,6 +844,191 @@ describe('Utils', function () {
 
       sizes = utils.getAdUnitSizes({ mediaTypes: { banner: { sizes: [[300, 250], [300, 600]] } } });
       expect(sizes).to.deep.equal([[300, 250], [300, 600]]);
+    });
+  });
+
+  describe('getDigiTrustId', () => {
+    const testDigitrustKey = 'test-key';
+    const failureDigitrustResponse = null;
+    let sandbox;
+    beforeEach(() => {
+      sandbox = sinon.sandbox.create();
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should send digitrust params', () => {
+      window.DigiTrust = {
+        getUser: function () {
+        }
+      };
+      sandbox.stub(window.DigiTrust, 'getUser').callsFake(() =>
+        ({
+          success: true,
+          identity: {
+            privacy: {optout: false},
+            id: 'testId',
+            keyv: 'testKeyV'
+          }
+        })
+      );
+
+      let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+      assert.deepEqual(digitrustId, {
+        privacy: {optout: false},
+        id: 'testId',
+        keyv: 'testKeyV'
+      });
+
+      delete window.DigiTrust;
+    });
+
+    it('should not send digitrust params when DigiTrust not loaded', () => {
+      let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+      expect(digitrustId).to.equal(failureDigitrustResponse);
+    });
+
+    it('should not send digitrust params due to optout', () => {
+      window.DigiTrust = {
+        getUser: function () {
+        }
+      };
+      sandbox.stub(window.DigiTrust, 'getUser').callsFake(() =>
+        ({
+          success: true,
+          identity: {
+            privacy: {optout: true},
+            id: 'testId',
+            keyv: 'testKeyV'
+          }
+        })
+      );
+
+      let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+      expect(digitrustId).to.equal(failureDigitrustResponse);
+
+      delete window.DigiTrust;
+    });
+
+    it('should not send digitrust params due to failure', () => {
+      window.DigiTrust = {
+        getUser: function () {
+        }
+      };
+      sandbox.stub(window.DigiTrust, 'getUser').callsFake(() =>
+        ({
+          success: false,
+          identity: {
+            privacy: {optout: false},
+            id: 'testId',
+            keyv: 'testKeyV'
+          }
+        })
+      );
+
+      let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+      expect(digitrustId).to.equal(failureDigitrustResponse);
+
+      delete window.DigiTrust;
+    });
+
+    describe('digiTrustId config', () => {
+      var origGetConfig;
+      //let sandbox = sinon.sandbox.create();
+      beforeEach(() => {
+        window.DigiTrust = {
+          getUser: sandbox.spy()
+        };
+      });
+
+      afterEach(() => {
+        delete window.DigiTrust;
+      });
+
+      it('should send digiTrustId config params', () => {
+        sandbox.stub(config, 'getConfig').callsFake((key) => {
+          var config = {
+            digiTrustId: {
+              success: true,
+              identity: {
+                privacy: {optout: false},
+                id: 'testId',
+                keyv: 'testKeyV'
+              }
+            }
+          };
+          return config[key];
+        });
+
+        let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+        assert.deepEqual(digitrustId, {
+          privacy: {optout: false},
+          id: 'testId',
+          keyv: 'testKeyV'
+        });
+
+        // should not have called DigiTrust.getUser()
+        expect(window.DigiTrust.getUser.notCalled).to.equal(true);
+      });
+
+      it('should not send digiTrustId config params due to optout', () => {
+        sandbox.stub(config, 'getConfig').callsFake((key) => {
+          var config = {
+            digiTrustId: {
+              success: true,
+              identity: {
+                privacy: {optout: true},
+                id: 'testId',
+                keyv: 'testKeyV'
+              }
+            }
+          }
+          return config[key];
+        });
+
+        let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+        expect(digitrustId).to.equal(failureDigitrustResponse);
+
+        // should not have called DigiTrust.getUser()
+        expect(window.DigiTrust.getUser.notCalled).to.equal(true);
+      });
+
+      it('should not send digiTrustId config params due to failure', () => {
+        sandbox.stub(config, 'getConfig').callsFake((key) => {
+          var config = {
+            digiTrustId: {
+              success: false,
+              identity: {
+                privacy: {optout: false},
+                id: 'testId',
+                keyv: 'testKeyV'
+              }
+            }
+          }
+          return config[key];
+        });
+
+        let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+        expect(digitrustId).to.equal(failureDigitrustResponse);
+
+        // should not have called DigiTrust.getUser()
+        expect(window.DigiTrust.getUser.notCalled).to.equal(true);
+      });
+
+      it('should not send digiTrustId config params if they do not exist', () => {
+        sandbox.stub(config, 'getConfig').callsFake((key) => {
+          var config = {};
+          return config[key];
+        });
+
+        let digitrustId = utils.getDigiTrustId(testDigitrustKey);
+        expect(digitrustId).to.equal(failureDigitrustResponse);
+
+        // should have called DigiTrust.getUser() once
+        expect(window.DigiTrust.getUser.calledOnce).to.equal(true);
+      });
     });
   });
 });
