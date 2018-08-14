@@ -936,7 +936,6 @@ describe('Utils', function () {
 
     describe('digiTrustId config', () => {
       var origGetConfig;
-      //let sandbox = sinon.sandbox.create();
       beforeEach(() => {
         window.DigiTrust = {
           getUser: sandbox.spy()
