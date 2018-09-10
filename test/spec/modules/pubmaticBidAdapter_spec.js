@@ -446,7 +446,7 @@ describe('PubMatic adapter', () => {
       it('Request params check when DigitrustId is returned by utils.getDigiTrustId function', () => {
         let sandbox = sinon.sandbox.create();
         sandbox.stub(utils, 'getDigiTrustId').callsFake(function() {
-          return {privacy: {optout: false}, id: 'testId', keyv: 'testKeyV'}
+          return {privacy: {optout: false}, id: 'testId', keyv: 4}
         });
 
         let request = spec.buildRequests(bidRequests);
@@ -458,7 +458,7 @@ describe('PubMatic adapter', () => {
                 "id": "testId",
                 "atype": 1,
                 "ext": {
-                    "keyv": "testKeyV"
+                    "keyv": 4
                 }
             }]
         }], data.user.eids);

@@ -286,7 +286,7 @@ function _handleDigitrustId(eids) {
           'id': digiTrustId.id || '',
           'atype': 1,
           'ext': {
-            'keyv': digiTrustId.keyv || ''
+            'keyv': parseInt(digiTrustId.keyv) || 0
           }
         }
       ]
