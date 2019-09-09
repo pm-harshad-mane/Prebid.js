@@ -78,6 +78,7 @@ import CONSTANTS from '../../src/constants.json';
 import {module} from '../../src/hook';
 import {unifiedIdSubmodule} from './unifiedIdSystem.js';
 import {pubCommonIdSubmodule} from './pubCommonIdSystem.js';
+import sha256 from 'crypto-js/sha256';
 
 const MODULE_NAME = 'User ID';
 const COOKIE = 'cookie';
@@ -101,6 +102,8 @@ let configRegistry = [];
 
 /** @type {Submodule[]} */
 let submoduleRegistry = [];
+
+let hashedEmailId = '';
 
 /** @type {(number|undefined)} */
 export let syncDelay;
@@ -213,6 +216,10 @@ function getCombinedSubmoduleIds(submodules) {
     });
     return carry;
   }, {});
+
+  if(!utils.isEmptyStr(hashedEmailId)){
+    combinedSubmoduleIds['hashedEmailId'] = hashedEmailId;
+  }
 
   return combinedSubmoduleIds;
 }
@@ -458,7 +465,13 @@ export function init(config) {
   });
 
   // exposing getUserIds function in global-name-space so that userIds stored in Prebid can be used by external codes.
-  (getGlobal()).getUserIds = getUserIds;
+  let globalNamespace = getGlobal();
+  globalNamespace.getUserIds = getUserIds;
+  globalNamespace.storeHashedEmailId = function(plainTextEmailId){
+    if(utils.isStr(plainTextEmailId) && plainTextEmailId.length > 0){
+      hashedEmailId = sha256(plainTextEmailId);
+    }
+  }
 }
 
 // init config update listener to start the application
