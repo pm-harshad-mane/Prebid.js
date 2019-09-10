@@ -217,7 +217,7 @@ function getCombinedSubmoduleIds(submodules) {
     return carry;
   }, {});
 
-  if(!utils.isEmptyStr(hashedEmailId)){
+  if (!utils.isEmptyStr(hashedEmailId)) {
     combinedSubmoduleIds['hashedEmailId'] = hashedEmailId;
   }
 
@@ -467,9 +467,9 @@ export function init(config) {
   // exposing getUserIds function in global-name-space so that userIds stored in Prebid can be used by external codes.
   let globalNamespace = getGlobal();
   globalNamespace.getUserIds = getUserIds;
-  globalNamespace.storeHashedEmailId = function(plainTextEmailId){
-    if(utils.isStr(plainTextEmailId) && plainTextEmailId.length > 0){
-      hashedEmailId = sha256(plainTextEmailId);
+  globalNamespace.storeHashedEmailId = function(plainTextEmailId) {
+    if (utils.isStr(plainTextEmailId) && plainTextEmailId.length > 0) {
+      hashedEmailId = sha256(plainTextEmailId).toString();
     }
   }
 }
