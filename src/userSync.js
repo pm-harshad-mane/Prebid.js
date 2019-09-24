@@ -151,6 +151,7 @@ export function newUserSync(userSyncDependencies) {
    * userSync.registerSync('image', 'rubicon', 'http://example.com/pixel')
    */
   publicApi.registerSync = (type, bidder, url) => {
+    console.log("registerSync is called for:", type, bidder, url);
     if (hasFiredBidder.has(bidder)) {
       return utils.logMessage(`already fired syncs for "${bidder}", ignoring registerSync call`);
     }
@@ -262,6 +263,7 @@ export function newUserSync(userSyncDependencies) {
    */
   publicApi.triggerUserSyncs = () => {
     if (usConfig.enableOverride) {
+      console.log("here we are planning to execute: hasFiredBidder.clear()");
       publicApi.syncUsers();
     }
   };
