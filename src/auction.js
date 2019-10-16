@@ -59,6 +59,7 @@ import { userSync } from './userSync';
 import { hook } from './hook';
 import find from 'core-js/library/fn/array/find';
 import { OUTSTREAM } from './video';
+import Set from 'core-js/library/fn/set';
 
 const { syncUsers } = userSync;
 const utils = require('./utils');
