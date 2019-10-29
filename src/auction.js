@@ -571,21 +571,24 @@ export function getStandardBidderSettings(mediaType, bidderCode) {
   if (!bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD]) {
     bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD] = {};
   }
-  if (!bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING]) {
-    bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING] = [
-      createKeyVal(TARGETING_KEYS.BIDDER, 'bidderCode'),
-      createKeyVal(TARGETING_KEYS.AD_ID, 'adId'),
-      createKeyVal(TARGETING_KEYS.PRICE_BUCKET, getPriceByGranularity(granularity)),
-      createKeyVal(TARGETING_KEYS.SIZE, 'size'),
-      createKeyVal(TARGETING_KEYS.DEAL, 'dealId'),
-      createKeyVal(TARGETING_KEYS.SOURCE, 'source'),
-      createKeyVal(TARGETING_KEYS.FORMAT, 'mediaType'),
-    ]
-  }
 
-  if (mediaType === 'video') {
-    const adserverTargeting = bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING];
+  const adserverTargeting = bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING];
+  // add following keys if not already defined in bidderSettings.standard.adserverTargeting
+  [
+    {key: TARGETING_KEYS.BIDDER, useVal: 'bidderCode'},
+    {key: TARGETING_KEYS.AD_ID, useVal: 'adId'},
+    {key: TARGETING_KEYS.PRICE_BUCKET, useVal: getPriceByGranularity(granularity)},
+    {key: TARGETING_KEYS.SIZE, useVal: 'size'},
+    {key: TARGETING_KEYS.DEAL, useVal: 'dealId'},
+    {key: TARGETING_KEYS.SOURCE, useVal: 'source'},
+    {key: TARGETING_KEYS.FORMAT, useVal: 'mediaType'}
+  ].forEach(function(e){
+    if (typeof find(adserverTargeting, kvPair => kvPair.key === targetingKeyVal) === 'undefined') {
+      bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING].push(createKeyVal(e.key, e.useVal));
+    }
+  });
 
+  if (mediaType === 'video') {    
     // Adding hb_uuid + hb_cache_id
     [TARGETING_KEYS.UUID, TARGETING_KEYS.CACHE_ID].forEach(targetingKeyVal => {
       if (typeof find(adserverTargeting, kvPair => kvPair.key === targetingKeyVal) === 'undefined') {
