@@ -571,8 +571,10 @@ export function getStandardBidderSettings(mediaType, bidderCode) {
   if (!bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD]) {
     bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD] = {};
   }
-
-  const adserverTargeting = bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING];
+  if(!bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING]){
+    bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING] = [];
+  }
+  let adserverTargeting = bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING];
   // add following keys if not already defined in bidderSettings.standard.adserverTargeting
   [
     {key: TARGETING_KEYS.BIDDER, useVal: 'bidderCode'},
@@ -582,13 +584,13 @@ export function getStandardBidderSettings(mediaType, bidderCode) {
     {key: TARGETING_KEYS.DEAL, useVal: 'dealId'},
     {key: TARGETING_KEYS.SOURCE, useVal: 'source'},
     {key: TARGETING_KEYS.FORMAT, useVal: 'mediaType'}
-  ].forEach(function(e){
-    if (typeof find(adserverTargeting, kvPair => kvPair.key === targetingKeyVal) === 'undefined') {
-      bidderSettings[CONSTANTS.JSON_MAPPING.BD_SETTING_STANDARD][CONSTANTS.JSON_MAPPING.ADSERVER_TARGETING].push(createKeyVal(e.key, e.useVal));
+  ].forEach(function(targetingKeyVal){
+    if (typeof find(adserverTargeting, kvPair => kvPair.key === targetingKeyVal.key) === 'undefined') {
+      adserverTargeting.push(createKeyVal(targetingKeyVal.key, targetingKeyVal.useVal));
     }
   });
 
-  if (mediaType === 'video') {    
+  if (mediaType === 'video') {
     // Adding hb_uuid + hb_cache_id
     [TARGETING_KEYS.UUID, TARGETING_KEYS.CACHE_ID].forEach(targetingKeyVal => {
       if (typeof find(adserverTargeting, kvPair => kvPair.key === targetingKeyVal) === 'undefined') {
