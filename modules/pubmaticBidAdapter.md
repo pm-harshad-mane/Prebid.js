@@ -60,7 +60,7 @@ var adVideoAdUnits = [
         adSlot: 'pubmatic_video1',              // optional
         video: {
           mimes: ['video/mp4','video/x-flv'],   // required
-          skippable: true,                      // optional
+          skip: 1,                              // optional
           minduration: 5,                       // optional
           maxduration: 30,                      // optional
           startdelay: 5,                        // optional
@@ -159,7 +159,7 @@ var adUnits = [
         dctr: 'key1=123|key2=345',           // optional (Value configured only in the 1st adunit will be passed on. < br/> Values if present in subsequent adunits, will be ignored.)
         video: {
           mimes: ['video/mp4','video/x-flv'],   // required
-          skippable: true,                      // optional
+          skip: 1,                              // optional
           minduration: 5,                       // optional
           maxduration: 30,                      // optional
           startdelay: 5,                        // optional

@@ -96,7 +96,7 @@ describe('PubMatic adapter', function () {
           adSlot: 'Div1@0x0', // ad_id or tagid
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
-            skippable: true,
+            skip: 1,
             minduration: 5,
             maxduration: 30,
             startdelay: 5,
@@ -145,7 +145,7 @@ describe('PubMatic adapter', function () {
           adSlot: 'Div1@640x480', // ad_id or tagid
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
-            skippable: true,
+            skip: 1,
             minduration: 5,
             maxduration: 30,
             startdelay: 15,
@@ -333,7 +333,7 @@ describe('PubMatic adapter', function () {
           dctr: 'key1:val1,val2|key2:val1',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
-            skippable: true,
+            skip: 1,
             minduration: 5,
             maxduration: 30,
             startdelay: 15,
@@ -443,7 +443,7 @@ describe('PubMatic adapter', function () {
           adSlot: '/15671365/DMDemo@300x250:0',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
-            skippable: true,
+            skip: 1,
             minduration: 5,
             maxduration: 30,
             startdelay: 15,
@@ -504,7 +504,7 @@ describe('PubMatic adapter', function () {
           adSlot: '/15671365/DMDemo@300x250:0',
           video: {
             mimes: ['video/mp4', 'video/x-flv'],
-            skippable: true,
+            skip: 1,
             minduration: 5,
             maxduration: 30,
             startdelay: 15,
@@ -1901,7 +1901,7 @@ describe('PubMatic adapter', function () {
         let data = JSON.parse(request.data);
         expect(data.imp[0].video).to.exist;
         expect(data.imp[0].tagid).to.equal('Div1');
-        expect(data.imp[0].video.ext['video_skippable']).to.equal(videoBidRequests[0].params.video.skippable ? 1 : 0);
+        expect(data.imp[0].video.skip).to.equal(videoBidRequests[0].params.video.skip === 1 ? 1 : 0);
         expect(data.imp[0]['video']['mimes']).to.exist.and.to.be.an('array');
         expect(data.imp[0]['video']['mimes'][0]).to.equal(videoBidRequests[0].params.video['mimes'][0]);
         expect(data.imp[0]['video']['mimes'][1]).to.equal(videoBidRequests[0].params.video['mimes'][1]);
@@ -1969,7 +1969,7 @@ describe('PubMatic adapter', function () {
         // video imp object check
         expect(data.imp[1].video).to.exist;
         expect(data.imp[1].tagid).to.equal('Div1');
-        expect(data.imp[1].video.ext['video_skippable']).to.equal(multipleMediaRequests[1].params.video.skippable ? 1 : 0);
+        expect(data.imp[1].video.skip).to.equal(multipleMediaRequests[1].params.video.skip === 1 ? 1 : 0);
         expect(data.imp[1]['video']['mimes']).to.exist.and.to.be.an('array');
         expect(data.imp[1]['video']['mimes'][0]).to.equal(multipleMediaRequests[1].params.video['mimes'][0]);
         expect(data.imp[1]['video']['mimes'][1]).to.equal(multipleMediaRequests[1].params.video['mimes'][1]);

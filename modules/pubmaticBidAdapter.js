@@ -484,10 +484,8 @@ function _createVideoRequest(bid) {
       videoObj.w = parseInt(bid.mediaTypes.video.playerSize[0], 10);
       videoObj.h = parseInt(bid.mediaTypes.video.playerSize[1], 10);
     }
-    if (bid.params.video.hasOwnProperty('skippable')) {
-      videoObj.ext = {
-        'video_skippable': bid.params.video.skippable ? 1 : 0
-      };
+    if (bid.params.video.hasOwnProperty('skip')) {
+      videoObj.skip = bid.params.video.skip === 1 ? 1 : 0;
     }
   } else {
     videoObj = UNDEFINED;
