@@ -4,7 +4,9 @@
  */
 
 import events from './events.js';
+// removeIf(disableNativeRelatedCode)
 import { fireNativeTrackers, getAssetMessage } from './native.js';
+// endRemoveIf(disableNativeRelatedCode)
 import { EVENTS } from './constants.json';
 import { logWarn, replaceAuctionPrice } from './utils.js';
 import { auctionManager } from './auctionManager.js';
@@ -46,6 +48,7 @@ function receiveMessage(ev) {
     //   message: 'Prebid Native',
     //   adId: '%%PATTERN:hb_adid%%'
     // }), '*');
+    // removeIf(disableNativeRelatedCode)
     if (adObject && data.message === 'Prebid Native') {
       if (data.action === 'assetRequest') {
         const message = getAssetMessage(data, adObject);
@@ -59,6 +62,7 @@ function receiveMessage(ev) {
       auctionManager.addWinningBid(adObject);
       events.emit(BID_WON, adObject);
     }
+    // endRemoveIf(disableNativeRelatedCode)
   }
 }
 
