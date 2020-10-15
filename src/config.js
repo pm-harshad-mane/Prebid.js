@@ -16,13 +16,15 @@ import { isValidPriceConfig } from './cpmBucketManager.js';
 import find from 'core-js-pure/features/array/find.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import Set from 'core-js-pure/features/set';
-import { mergeDeep } from './utils.js';
+import {
+  mergeDeep, getParameterByName, isPlainObject, logMessage,
+  logWarn, logError, deepAccess, bind
+} from './utils.js';
 
 const from = require('core-js-pure/features/array/from.js');
-const utils = require('./utils.js');
 const CONSTANTS = require('./constants.json');
 
-const DEFAULT_DEBUG = utils.getParameterByName(CONSTANTS.DEBUG_MODE).toUpperCase() === 'TRUE';
+const DEFAULT_DEBUG = getParameterByName(CONSTANTS.DEBUG_MODE).toUpperCase() === 'TRUE';
 const DEFAULT_BIDDER_TIMEOUT = 3000;
 const DEFAULT_PUBLISHER_DOMAIN = window.location.origin;
 const DEFAULT_ENABLE_SEND_ALL_BIDS = true;
@@ -102,10 +104,10 @@ export function newConfig() {
         if (validatePriceGranularity(val)) {
           if (typeof val === 'string') {
             this._priceGranularity = (hasGranularity(val)) ? val : GRANULARITY_OPTIONS.MEDIUM;
-          } else if (utils.isPlainObject(val)) {
+          } else if (isPlainObject(val)) {
             this._customPriceBucket = val;
             this._priceGranularity = GRANULARITY_OPTIONS.CUSTOM;
-            utils.logMessage('Using custom price granularity');
+            logMessage('Using custom price granularity');
           }
         }
       },
@@ -132,12 +134,12 @@ export function newConfig() {
           if (validatePriceGranularity(val[item])) {
             if (typeof val === 'string') {
               aggregate[item] = (hasGranularity(val[item])) ? val[item] : this._priceGranularity;
-            } else if (utils.isPlainObject(val)) {
+            } else if (isPlainObject(val)) {
               aggregate[item] = val[item];
-              utils.logMessage(`Using custom price granularity for ${item}`);
+              logMessage(`Using custom price granularity for ${item}`);
             }
           } else {
-            utils.logWarn(`Invalid price granularity for media type: ${item}`);
+            logWarn(`Invalid price granularity for media type: ${item}`);
           }
           return aggregate;
         }, {});
@@ -179,7 +181,7 @@ export function newConfig() {
         if (VALID_ORDERS[val]) {
           this._bidderSequence = val;
         } else {
-          utils.logWarn(`Invalid order: ${val}. Bidder Sequence was not set.`);
+          logWarn(`Invalid order: ${val}. Bidder Sequence was not set.`);
         }
       },
 
@@ -222,16 +224,16 @@ export function newConfig() {
 
     function validatePriceGranularity(val) {
       if (!val) {
-        utils.logError('Prebid Error: no value passed to `setPriceGranularity()`');
+        logError('Prebid Error: no value passed to `setPriceGranularity()`');
         return false;
       }
       if (typeof val === 'string') {
         if (!hasGranularity(val)) {
-          utils.logWarn('Prebid Warning: setPriceGranularity was called with invalid setting, using `medium` as default.');
+          logWarn('Prebid Warning: setPriceGranularity was called with invalid setting, using `medium` as default.');
         }
-      } else if (utils.isPlainObject(val)) {
+      } else if (isPlainObject(val)) {
         if (!isValidPriceConfig(val)) {
-          utils.logError('Invalid custom price value passed to `setPriceGranularity()`');
+          logError('Invalid custom price value passed to `setPriceGranularity()`');
           return false;
         }
       }
@@ -244,7 +246,7 @@ export function newConfig() {
    * @private
    */
   function _getConfig() {
-    if (currBidder && bidderConfig && utils.isPlainObject(bidderConfig[currBidder])) {
+    if (currBidder && bidderConfig && isPlainObject(bidderConfig[currBidder])) {
       let currBidderConfig = bidderConfig[currBidder];
       const configTopicSet = new Set(Object.keys(config).concat(Object.keys(currBidderConfig)));
 
@@ -254,7 +256,7 @@ export function newConfig() {
         } else if (typeof config[topic] === 'undefined') {
           memo[topic] = currBidderConfig[topic];
         } else {
-          if (utils.isPlainObject(currBidderConfig[topic])) {
+          if (isPlainObject(currBidderConfig[topic])) {
             memo[topic] = mergeDeep({}, config[topic], currBidderConfig[topic]);
           } else {
             memo[topic] = currBidderConfig[topic];
@@ -277,7 +279,7 @@ export function newConfig() {
   function getConfig(...args) {
     if (args.length <= 1 && typeof args[0] !== 'function') {
       const option = args[0];
-      return option ? utils.deepAccess(_getConfig(), option) : _getConfig();
+      return option ? deepAccess(_getConfig(), option) : _getConfig();
     }
 
     return subscribe(...args);
@@ -295,8 +297,8 @@ export function newConfig() {
    * listeners that were added by the `subscribe` function
    */
   function setConfig(options) {
-    if (!utils.isPlainObject(options)) {
-      utils.logError('setConfig options must be an object');
+    if (!isPlainObject(options)) {
+      logError('setConfig options must be an object');
       return;
     }
 
@@ -306,7 +308,7 @@ export function newConfig() {
     topics.forEach(topic => {
       let option = options[topic];
 
-      if (utils.isPlainObject(defaults[topic]) && utils.isPlainObject(option)) {
+      if (isPlainObject(defaults[topic]) && isPlainObject(option)) {
         option = Object.assign({}, defaults[topic], option);
       }
 
@@ -321,8 +323,8 @@ export function newConfig() {
    * @param {object} options
    */
   function setDefaults(options) {
-    if (!utils.isPlainObject(defaults)) {
-      utils.logError('defaults must be an object');
+    if (!isPlainObject(defaults)) {
+      logError('defaults must be an object');
       return;
     }
 
@@ -363,7 +365,7 @@ export function newConfig() {
     }
 
     if (typeof callback !== 'function') {
-      utils.logError('listener must be a function');
+      logError('listener must be a function');
       return;
     }
 
@@ -404,7 +406,7 @@ export function newConfig() {
         }
         Object.keys(config.config).forEach(topic => {
           let option = config.config[topic];
-          if (utils.isPlainObject(option)) {
+          if (isPlainObject(option)) {
             bidderConfig[bidder][topic] = Object.assign({}, bidderConfig[bidder][topic] || {}, option);
           } else {
             bidderConfig[bidder][topic] = option;
@@ -412,16 +414,16 @@ export function newConfig() {
         });
       });
     } catch (e) {
-      utils.logError(e);
+      logError(e);
     }
     function check(obj) {
-      if (!utils.isPlainObject(obj)) {
+      if (!isPlainObject(obj)) {
         throw 'setBidderConfig bidder options must be an object';
       }
       if (!(Array.isArray(obj.bidders) && obj.bidders.length)) {
         throw 'setBidderConfig bidder options must contain a bidders list with at least 1 bidder';
       }
-      if (!utils.isPlainObject(obj.config)) {
+      if (!isPlainObject(obj.config)) {
         throw 'setBidderConfig bidder options must contain a config object';
       }
     }
@@ -442,9 +444,9 @@ export function newConfig() {
     return function(cb) {
       return function(...args) {
         if (typeof cb === 'function') {
-          return runWithBidder(bidder, utils.bind.call(cb, this, ...args))
+          return runWithBidder(bidder, bind.call(cb, this, ...args))
         } else {
-          utils.logWarn('config.callbackWithBidder callback is not a function');
+          logWarn('config.callbackWithBidder callback is not a function');
         }
       }
     }
