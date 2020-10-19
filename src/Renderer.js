@@ -1,5 +1,5 @@
 import { loadExternalScript } from './adloader.js';
-import * as utils from './utils.js';
+import { logError, logWarn, logMessage, isBoolean } from './utils.js';
 import find from 'core-js-pure/features/array/find.js';
 const moduleCode = 'outstream';
 
@@ -25,7 +25,7 @@ export function Renderer(options) {
   this.cmd = [];
   this.push = func => {
     if (typeof func !== 'function') {
-      utils.logError('Commands given to Renderer.push must be wrapped in a function');
+      logError('Commands given to Renderer.push must be wrapped in a function');
       return;
     }
     this.loaded ? func.call() : this.cmd.push(func);
@@ -43,13 +43,13 @@ export function Renderer(options) {
       // we expect to load a renderer url once only so cache the request to load script
       loadExternalScript(url, moduleCode, this.callback);
     } else {
-      utils.logWarn(`External Js not loaded by Renderer since renderer url and callback is already defined on adUnit ${adUnitCode}`);
+      logWarn(`External Js not loaded by Renderer since renderer url and callback is already defined on adUnit ${adUnitCode}`);
     }
 
     if (this._render) {
       this._render.apply(this, arguments) // _render is expected to use push as appropriate
     } else {
-      utils.logWarn(`No render function was provided, please use .setRender on the renderer`);
+      logWarn(`No render function was provided, please use .setRender on the renderer`);
     }
   }.bind(this) // bind the function to this object to avoid 'this' errors
 }
@@ -75,7 +75,7 @@ Renderer.prototype.handleVideoEvent = function({ id, eventName }) {
     this.handlers[eventName]();
   }
 
-  utils.logMessage(`Prebid Renderer event for id ${id} type ${eventName}`);
+  logMessage(`Prebid Renderer event for id ${id} type ${eventName}`);
 };
 
 /*
@@ -87,7 +87,7 @@ Renderer.prototype.process = function() {
     try {
       this.cmd.shift().call();
     } catch (error) {
-      utils.logError('Error processing Renderer command: ', error);
+      logError('Error processing Renderer command: ', error);
     }
   }
 };
@@ -115,5 +115,5 @@ function isRendererPreferredFromAdUnit(adUnitCode) {
   const adUnit = find(adUnits, adUnit => {
     return adUnit.code === adUnitCode;
   });
-  return !!(adUnit && adUnit.renderer && adUnit.renderer.url && adUnit.renderer.render && !(utils.isBoolean(adUnit.renderer.backupOnly) && adUnit.renderer.backupOnly));
+  return !!(adUnit && adUnit.renderer && adUnit.renderer.url && adUnit.renderer.render && !(isBoolean(adUnit.renderer.backupOnly) && adUnit.renderer.backupOnly));
 }
