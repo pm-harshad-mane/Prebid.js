@@ -3,6 +3,7 @@ import { config } from './config.js';
 import clone from 'just-clone';
 import find from 'core-js-pure/features/array/find.js';
 import includes from 'core-js-pure/features/array/includes.js';
+import * as events from './events.js';
 
 const CONSTANTS = require('./constants.json');
 
@@ -15,13 +16,11 @@ var tFn = 'Function';
 var tNumb = 'Number';
 var tObject = 'Object';
 var tBoolean = 'Boolean';
-var toString = Object.prototype.toString;
 let consoleExists = Boolean(window.console);
 let consoleLogExists = Boolean(consoleExists && window.console.log);
 let consoleInfoExists = Boolean(consoleExists && window.console.info);
 let consoleWarnExists = Boolean(consoleExists && window.console.warn);
 let consoleErrorExists = Boolean(consoleExists && window.console.error);
-var events = require('./events.js');
 
 // this allows stubbing of utility functions that are used internally by other utility functions
 export const internal = {
@@ -315,6 +314,7 @@ export function getParameterByName(name) {
  * @return {Boolean} if object is of type _t
  */
 export function isA(object, _t) {
+  var toString = Object.prototype.toString;
   return toString.call(object) === '[object ' + _t + ']';
 }
 
