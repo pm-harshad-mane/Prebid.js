@@ -3,7 +3,7 @@
    access to a publisher page from creative payloads.
  */
 
-import events from './events.js';
+import * as events from './events.js';
 // removeIf(disableNativeRelatedCode)
 import { fireNativeTrackers, getAssetMessage } from './native.js';
 // endRemoveIf(disableNativeRelatedCode)

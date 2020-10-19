@@ -14,7 +14,7 @@ import {
   fieldMatchingFunctions,
   allowedFields
 } from 'modules/priceFloors.js';
-import events from 'src/events.js';
+import * as events from 'src/events.js';
 
 describe('the price floors module', function () {
   let logErrorSpy;

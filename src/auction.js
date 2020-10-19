@@ -73,10 +73,10 @@ import { hook } from './hook.js';
 import find from 'core-js-pure/features/array/find.js';
 import { OUTSTREAM } from './video.js';
 import { VIDEO } from './mediaTypes.js';
+import * as events from './events.js';
 
 const { syncUsers } = userSync;
 const adapterManager = require('./adapterManager.js').default;
-const events = require('./events.js');
 const CONSTANTS = require('./constants.json');
 
 export const AUCTION_STARTED = 'started';

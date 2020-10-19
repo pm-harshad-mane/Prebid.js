@@ -2,7 +2,7 @@ import { init, requestBidsHook, setSubmoduleRegistry, coreStorage } from 'module
 import { config } from 'src/config.js';
 import { id5IdSubmodule } from 'modules/id5IdSystem.js';
 import { server } from 'test/mocks/xhr.js';
-import events from 'src/events.js';
+import * as events from 'src/events.js';
 import CONSTANTS from 'src/constants.json';
 
 let expect = require('chai').expect;

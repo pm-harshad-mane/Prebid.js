@@ -11,7 +11,7 @@ import includes from 'core-js-pure/features/array/includes.js';
 import { registerSyncInner } from '../src/adapters/bidderFactory.js';
 import { getHook } from '../src/hook.js';
 import { validateStorageEnforcement } from '../src/storageManager.js';
-import events from '../src/events.js';
+import {emit, on} from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
 
 const TCF2 = {
@@ -345,10 +345,10 @@ function emitTCF2FinalResults() {
     analyticsBlocked: formatArray(analyticsBlocked)
   };
 
-  events.emit(EVENTS.TCF2_ENFORCEMENT, tcf2FinalResults);
+  emit(EVENTS.TCF2_ENFORCEMENT, tcf2FinalResults);
 }
 
-events.on(EVENTS.AUCTION_END, emitTCF2FinalResults);
+on(EVENTS.AUCTION_END, emitTCF2FinalResults);
 
 /*
   Set of callback functions used to detect presence of a TCF rule, passed as the second argument to find().

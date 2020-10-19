@@ -126,7 +126,7 @@ import {config} from '../../src/config.js';
 import {targeting} from '../../src/targeting.js';
 import {getHook, module} from '../../src/hook.js';
 import * as utils from '../../src/utils.js';
-import events from '../../src/events.js';
+import * as events from '../../src/events.js';
 import CONSTANTS from '../../src/constants.json';
 import {gdprDataHandler, uspDataHandler} from '../../src/adapterManager.js';
 import find from 'core-js-pure/features/array/find.js';

@@ -1,8 +1,7 @@
 /**
  * ga.js - analytics adapter for google analytics
  */
-
-var events = require('../src/events.js');
+import * as events from '../src/events.js';
 var utils = require('../src/utils.js');
 var CONSTANTS = require('../src/constants.json');
 var adapterManager = require('../src/adapterManager.js').default;

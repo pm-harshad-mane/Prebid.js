@@ -8,7 +8,7 @@ import { nativeBidIsValid } from '../native.js';
 // endRemoveIf(disableNativeRelatedCode)
 import { isValidVideoBid } from '../video.js';
 import CONSTANTS from '../constants.json';
-import events from '../events.js';
+import * as events from '../events.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import { ajax } from '../ajax.js';
 import { logWarn, logError, parseQueryStringParameters, delayExecution, parseSizesInput, getBidderRequest, flatten, uniques, timestamp, deepAccess, isArray, isPlainObject } from '../utils.js';

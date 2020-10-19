@@ -13,6 +13,8 @@ import {
   setConfig,
   addBidResponseHook,
 } from 'modules/currency.js';
+
+import * as events from 'src/events.js';
 let Ajv = require('ajv');
 let schema = require('./rubiconAnalyticsSchema.json');
 let ajv = new Ajv({
@@ -25,9 +27,6 @@ function validate(message) {
   validator(message);
   expect(validator.errors).to.deep.equal(null);
 }
-
-// using es6 "import * as events from 'src/events.js'" causes the events.getEvents stub not to work...
-let events = require('src/events.js');
 let utils = require('src/utils.js');
 
 const {

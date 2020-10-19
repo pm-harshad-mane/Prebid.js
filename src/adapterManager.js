@@ -16,9 +16,9 @@ import includes from 'core-js-pure/features/array/includes.js';
 import find from 'core-js-pure/features/array/find.js';
 import { adunitCounter } from './adUnits.js';
 import { getRefererInfo } from './refererDetection.js';
+import * as events from './events.js';
 
 var CONSTANTS = require('./constants.json');
-var events = require('./events.js');
 let s2sTestingModule; // store s2sTesting module if it's loaded
 
 let adapterManager = {};

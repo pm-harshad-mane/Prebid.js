@@ -20,11 +20,11 @@ import { adunitCounter } from './adUnits.js';
 import { executeRenderer, isRendererRequired } from './Renderer.js';
 import { createBid } from './bidfactory.js';
 import { storageCallbacks } from './storageManager.js';
+import * as events from './events.js';
 
 const $$PREBID_GLOBAL$$ = getGlobal();
 const CONSTANTS = require('./constants.json');
 const adapterManager = require('./adapterManager.js').default;
-const events = require('./events.js');
 const { triggerUserSyncs } = userSync;
 
 /* private variables */
