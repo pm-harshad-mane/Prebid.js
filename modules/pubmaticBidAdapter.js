@@ -679,6 +679,8 @@ function _addFloorFromFloorModule(impObj, bid) {
 function _handleEids(payload, validBidRequests) {
   const bidUserIdAsEids = utils.deepAccess(validBidRequests, '0.userIdAsEids');
   if (utils.isArray(bidUserIdAsEids) && bidUserIdAsEids.length > 0) {
+    // Note: Rubicon and PBS passes eids as user.ext.eids , PubMatic passes user.eids
+    //    PubMatic doc, https://community.pubmatic.com/display/PA/Bid+Request+Objects+and+Parameters
     utils.deepSetValue(payload, 'user.eids', bidUserIdAsEids);
   }
 }
