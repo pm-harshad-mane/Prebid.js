@@ -645,11 +645,33 @@ function _createImpressionObject(bid, conf) {
     impObj.banner = bannerObj;
   }
 
-  _addFloorFromFloorModule(impObj, bid);
+  _addFloorFromFloorModule(impObj, bid);  
+  _addFpdPbAdSlot(impObj, bid);
+  _addFpdAdServerDetails(impObj, bid);
 
   return impObj.hasOwnProperty(BANNER) ||
           impObj.hasOwnProperty(NATIVE) ||
             impObj.hasOwnProperty(VIDEO) ? impObj : UNDEFINED;
+}
+
+function _addFpdPbAdSlot(impObj, bid){
+  const pbAdSlot = utils.deepAccess(bid, 'fpd.context.pbAdSlot');
+  if (typeof pbAdSlot === 'string' && pbAdSlot) {
+    utils.deepSetValue(impObj, 'ext.context.data.pbadslot', pbAdSlot);
+  }
+}
+
+function _addFpdAdServerDetails(impObj, bid){
+  /**
+  * Copy GAM AdUnit and Name to imp
+  */
+  ['name', 'adSlot'].forEach(name => {
+    /** @type {(string|undefined)} */
+    const value = utils.deepAccess(bid, `fpd.context.adServer.${name}`);
+    if (typeof value === 'string' && value) {
+      utils.deepSetValue(impObj, `ext.context.data.adserver.${name.toLowerCase()}`, value);
+    }
+  });
 }
 
 function _addFloorFromFloorModule(impObj, bid) {
