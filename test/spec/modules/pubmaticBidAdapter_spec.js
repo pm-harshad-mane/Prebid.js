@@ -1444,6 +1444,66 @@ describe('PubMatic adapter', function () {
         });
       });
 
+      describe('FPD', function() {
+        describe('AdUnit.fpd.context.pbAdSlot', function() {
+          let newRequest;
+
+          beforeEach(() => {
+            newRequest = utils.deepClone(bannerVideoAndNativeBidRequests);
+          });
+
+          it('should not send \"imp.ext.context.data.pbadslot\" if \"fpd.context\" is undefined', function () {
+            newRequest[0].fpd = {};
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.pbadslot');
+          });
+
+          it('should not send \"imp.ext.context.data.pbadslot\" if \"fpd.context.pbAdSlot\" is undefined', function () {
+            newRequest[0].fpd = {
+              context: {
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.pbadslot');
+          });
+
+          it('should not send \"imp.ext.context.data.pbadslot\" if \"fpd.context.pbAdSlot\" is empty string', function () {
+            newRequest[0].fpd = {
+              context: {
+                pbAdSlot: ''
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.pbadslot');
+          });
+
+          it('should send \"imp.ext.context.data.pbadslot\" if \"fpd.context.pbAdSlot\" value is a non-empty string', function () {
+            newRequest[0].fpd = {
+              context: {
+                pbAdSlot: '/a/b/c'
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0].ext.context.data.pbadslot).to.equal('/a/b/c');
+          });
+        });
+
+        xdescribe('AdUnit.fpd.context.adServer', function() {
+        });
+      });
+
       it('should NOT include coppa flag in bid request if coppa config is not present', () => {
         const request = spec.buildRequests(bidRequests, {});
         let data = JSON.parse(request.data);
