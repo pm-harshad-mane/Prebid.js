@@ -1500,7 +1500,72 @@ describe('PubMatic adapter', function () {
           });
         });
 
-        xdescribe('AdUnit.fpd.context.adServer', function() {
+        describe('AdUnit.fpd.context.adServer', function() {
+          let newRequest;
+
+          beforeEach(() => {
+            newRequest = utils.deepClone(bannerVideoAndNativeBidRequests);
+          });
+
+          it('should not send \"imp.ext.context.data.adserver.adslot\" if \"fpd.context.adServer\" is undefined', function () {
+            newRequest[0].fpd = {
+              context: {
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.adserver.adslot');
+          });
+
+          it('should not send \"imp.ext.context.data.adserver.adslot\" if \"fpd.context.adServer.adSlot\" is undefined', function () {
+            newRequest[0].fpd = {
+              context: {
+                adServer: {
+                }
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.adserver.adslot');
+          });
+
+          it('should not send \"imp.ext.context.data.adserver.adslot\" if \"fpd.context.adServer.adSlot\" is empty string', function () {
+            newRequest[0].fpd = {
+              context: {
+                adServer: {
+                  adSlot: ''
+                }
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.not.have.deep.nested.property('ext.context.data.adserver.adslot');
+          });
+
+          it('should send both \"adslot\" and \"name\" from \"imp.ext.context.data.adServer\" if \"fpd.context.adServer.adSlot\" and \"fpd.context.adserver.name\" values are non-empty strings', function () {
+            newRequest[0].fpd = {
+              context: {
+                adServer: {
+                  adSlot: '/a/b/c',
+                  name: 'adserverName1'
+                }
+              }
+            };
+            let request = spec.buildRequests(newRequest, {
+              auctionId: 'new-auction-id'
+            });
+            let data = JSON.parse(request.data);
+            expect(data.imp[0]).to.have.deep.nested.property('ext.context.data.adserver.adslot');
+            expect(data.imp[0]).to.have.deep.nested.property('ext.context.data.adserver.name');
+            expect(data.imp[0].ext.context.data.adserver.adslot).to.equal('/a/b/c');
+            expect(data.imp[0].ext.context.data.adserver.name).to.equal('adserverName1');
+          });
         });
       });
 
