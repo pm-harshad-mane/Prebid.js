@@ -15,6 +15,22 @@ const AUCTION_DEBUG_KEY = 'auction_debug';
 // Do not load the lib if already loaded
 let uiLibraryLoaded = false;
 
+/*
+	ToDo:
+		current way of saving auction data makes it impossible to find which auction tok place first 
+			we should keep the data sorted in the order of occurence
+			change it to array
+			push object {auctionId, end} will help us add more data in future
+
+		Add Hook on setTargeting
+			save under auction?
+		Add Hook on tcf2Enforcement
+			Display under common
+		Add Hook on adRenderFailed
+			save under auction?
+		Can we get RAW request and response for all calls executed?	
+*/
+
 function loadUILibIfNotAlreadyLoaded(){
 	if(uiLibraryLoaded === false){
 		uiLibraryLoaded = true;
@@ -42,10 +58,13 @@ function createDebugObjectIfNotPresent(){
 }
 
 function createDebugObjectAuctionIfNotPresent(){
-	if( isPlainObject( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY]) === false ) {
-		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY] = {};
+	if( isArray( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY]) === false ) {
+		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY] = [];
 	}
 }
+
+// add method to add the auction based entry
+// add method to check if entry is present for auctionId, if present then return object else return null
 
 function createAuctionIdEntryIfNotPresent(auctionId){
 	if( isPlainObject( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][auctionId]) === false ) {
