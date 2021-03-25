@@ -7,28 +7,24 @@ const MODULE_NAME = 'Prebid JS Debug UI';
 const UI_LIBRARY_END_POINT = '';
 const UI_LIBRARY_LOAD_DELAY = 3000;
 const PBJS_NAMESPACE = '$$PREBID_GLOBAL$$';
-const DEBUG_OBJECT_KEY_NAME = 'pbjsDebugUI';
-const AUCTIONS_KEY = 'auction_data';
-const AUCTION_END_KEY = 'end';
-const AUCTION_DEBUG_KEY = 'auction_debug';
+// UI library depends on these keys, so do not make changes to keys
+const DEBUG_OBJECT_KEY_NAME = '_pbjsDebugUI';
+const AUCTIONS_KEY = '_auctions';
+const AUCTION_INIT_KEY = '_init';
+const AUCTION_END_KEY = '_end';
+const DEBUG_KEY = '_debug';
+const AUCTION_TAEGETING_KEY = '_targeting';
+const TCF2_KEY = '_tcf2Enforcement';
+// TCF2_ENFORCEMENT
+
 
 // Do not load the lib if already loaded
 let uiLibraryLoaded = false;
 
 /*
 	ToDo:
-		current way of saving auction data makes it impossible to find which auction tok place first 
-			we should keep the data sorted in the order of occurence
-			change it to array
-			push object {auctionId, end} will help us add more data in future
-
-		Add Hook on setTargeting
-			save under auction?
 		Add Hook on tcf2Enforcement
 			Display under common
-		Add Hook on adRenderFailed
-			save under auction?
-		Can we get RAW request and response for all calls executed?	
 */
 
 function loadUILibIfNotAlreadyLoaded(){
@@ -63,51 +59,97 @@ function createDebugObjectAuctionIfNotPresent(){
 	}
 }
 
-// add method to add the auction based entry
-// add method to check if entry is present for auctionId, if present then return object else return null
-
-function createAuctionIdEntryIfNotPresent(auctionId){
-	if( isPlainObject( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][auctionId]) === false ) {
-		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][auctionId] = {};
+function getAuctionIdEntry(auctionId){
+	// create one if not present
+	let auctionEntry = $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].find(
+		auctionEntry => auctionEntry.auctionId === auctionId
+	);
+	if(isPlainObject(auctionEntry) === false){
+		auctionEntry = { auctionId };
+		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].push(auctionEntry);
 	}
+	return auctionEntry;
 }
 
-function saveAuctionEndData(auctionId, auctionEndData){
-	$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][auctionId][AUCTION_END_KEY] = auctionEndData;
+// TODO: improve the latest auction logic; 
+//			current logic fails when multiple auctions are initiated simultaneously		
+// 			better if pbjs passes respective auctionId with each event
+function getLatestAuctionEntry(){
+	return $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY][ 
+		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTIONS_KEY].length-1 
+	];
+}
+
+function auctionInitHandler(auctionInitData){
+	createDebugObjectIfNotPresent();
+	createDebugObjectAuctionIfNotPresent();
+	let auctionEntry = getAuctionIdEntry(auctionInitData.auctionId)
+	auctionEntry[AUCTION_INIT_KEY] = auctionInitData;
 }
 
 function auctionEndHandler(auctionEndData){
 	createDebugObjectIfNotPresent();
 	createDebugObjectAuctionIfNotPresent();
-	createAuctionIdEntryIfNotPresent(auctionEndData.auctionId);
 	// auctionEndData.timestamp is auctionStart
 	auctionEndData.auctionStart = auctionEndData.timestamp;
-	saveAuctionEndData(auctionEndData.auctionId, auctionEndData);
+	let auctionEntry = getAuctionIdEntry(auctionEndData.auctionId)
+	auctionEntry[AUCTION_END_KEY] = auctionEndData;
 }
 
 function createDebugObjectAuctionDebugIfNotPresent(){
-	if( isArray( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTION_DEBUG_KEY]) === false ) {
-		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTION_DEBUG_KEY] = [];
+	if( isArray( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY]) === false ) {
+		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY] = [];
 	}
 }
 
 function saveAuctionDebugData(auctionDebugData){
-	$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][AUCTION_DEBUG_KEY].push(auctionDebugData);
+	$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][DEBUG_KEY].push(auctionDebugData);
 }
 
 function auctionDebugHandler(auctionDebugData){
 	createDebugObjectIfNotPresent();
 	createDebugObjectAuctionDebugIfNotPresent();
 	saveAuctionDebugData(auctionDebugData);
+	// this data can't be put inside auction as error might be thrown before init of the auction
 }
+
+function createDebugObjectTcf2IfNotPresent(){
+	if( isPlainObject( $$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY]) === false ) {
+		$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = {};
+	}
+}
+
+function saveTcf2EnforcementData(tcf2EnforcementData){
+	$$PREBID_GLOBAL$$[DEBUG_OBJECT_KEY_NAME][TCF2_KEY] = tcf2EnforcementData;
+}
+
+function tcf2EnforcementHandler(tcf2EnforcementData){
+	createDebugObjectIfNotPresent();
+	createDebugObjectTcf2IfNotPresent();
+	saveTcf2EnforcementData(tcf2EnforcementData);
+}
+
+// putting this data in last auction to keep it safe
+//		otherwise the old data will be lost after a new auction takes place
+function setTargetingHandler(targetingData){
+	createDebugObjectIfNotPresent();
+	createDebugObjectAuctionIfNotPresent();
+	let auctionEntry = getLatestAuctionEntry();
+	auctionEntry[AUCTION_TAEGETING_KEY] = targetingData;
+}
+
+
 
 function init(){
 	// this module should work only if pbjs_debug is set to true in page-URL or debug mode is on thru config 
 	if(config.getConfig('debug') !==  true) {
 		return;
 	}
+	events.on(EVENTS.AUCTION_INIT, auctionInitHandler);
 	events.on(EVENTS.AUCTION_END, auctionEndHandler);
 	events.on(EVENTS.AUCTION_DEBUG, auctionDebugHandler);
+	events.on(EVENTS.SET_TARGETING, setTargetingHandler);
+	events.on(EVENTS.TCF2_ENFORCEMENT, tcf2EnforcementHandler);
 	loadUILibrary();
 }
 
