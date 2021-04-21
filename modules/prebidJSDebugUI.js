@@ -2,9 +2,10 @@ import { config } from '../src/config.js';
 import events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
 import {isPlainObject, isArray} from '../src/utils.js';
+import { loadExternalScript } from '../src/adloader.js'
 
 const MODULE_NAME = 'Prebid JS Debug UI';
-const UI_LIBRARY_END_POINT = '';
+const UI_LIBRARY_END_POINT = 'https://pm-harshad-mane.github.io/pbjs-debug-ui/bundle.js';
 const UI_LIBRARY_LOAD_DELAY = 3000;
 const PBJS_NAMESPACE = '$$PREBID_GLOBAL$$';
 // UI library depends on these keys, so do not make changes to keys
@@ -15,21 +16,18 @@ const AUCTION_END_KEY = '_end';
 const DEBUG_KEY = '_debug';
 const AUCTION_TAEGETING_KEY = '_targeting';
 const TCF2_KEY = '_tcf2Enforcement';
-// TCF2_ENFORCEMENT
-
 
 // Do not load the lib if already loaded
 let uiLibraryLoaded = false;
 
 /*
 	ToDo:
-		Add Hook on tcf2Enforcement
-			Display under common
 */
 
 function loadUILibIfNotAlreadyLoaded(){
 	if(uiLibraryLoaded === false){
 		uiLibraryLoaded = true;
+		loadExternalScript(UI_LIBRARY_END_POINT, 'pbjs-debug-ui');
 	}
 }
 
