@@ -13,6 +13,7 @@ const DEBUG_OBJECT_KEY_NAME = '_pbjsDebugUI';
 const AUCTIONS_KEY = '_auctions';
 const AUCTION_INIT_KEY = '_init';
 const AUCTION_END_KEY = '_end';
+const AUCTIONS_BIDS_WON_KEY = '_bidsWon';
 const DEBUG_KEY = '_debug';
 const AUCTION_TAEGETING_KEY = '_targeting';
 const TCF2_KEY = '_tcf2Enforcement';
@@ -136,6 +137,16 @@ function setTargetingHandler(targetingData){
 	auctionEntry[AUCTION_TAEGETING_KEY] = targetingData;
 }
 
+function bidWonHandler(bidWonData){
+	createDebugObjectIfNotPresent();
+	createDebugObjectAuctionIfNotPresent();
+	let auctionEntry = getAuctionIdEntry(bidWonData.auctionId);
+	if( !isPlainObject(auctionEntry[AUCTIONS_BIDS_WON_KEY])){
+		auctionEntry[AUCTIONS_BIDS_WON_KEY] = {};
+	}
+	auctionEntry[AUCTIONS_BIDS_WON_KEY][bidWonData.adId] = bidWonData;
+}
+
 
 
 function init(){
@@ -148,6 +159,7 @@ function init(){
 	events.on(EVENTS.AUCTION_DEBUG, auctionDebugHandler);
 	events.on(EVENTS.SET_TARGETING, setTargetingHandler);
 	events.on(EVENTS.TCF2_ENFORCEMENT, tcf2EnforcementHandler);
+	events.on(EVENTS.BID_WON, bidWonHandler);
 	loadUILibrary();
 }
 
