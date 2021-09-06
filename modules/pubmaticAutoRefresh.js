@@ -53,7 +53,7 @@ const MODULE_NAME = 'pubmaticAutoRefresh';
 
 // logMessage vs logInfo vs logWarn
 
-// remove excludeSlotIds and excludeSizes?
+// Remove excludeSlotIds and excludeSizes? Yes better to implement the function with own priorities;  mention in confluence doc!
 
 
 let DEFAULT_CONFIG = {
