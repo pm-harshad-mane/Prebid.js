@@ -3,7 +3,7 @@
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
-import { mergeDeep, logMessage, logWarn, pick, timestamp } from '../src/utils.js';
+import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn } from '../src/utils.js';
 
 const MODULE_NAME = 'pubmaticAutoRefresh';
 
@@ -39,7 +39,7 @@ const MODULE_NAME = 'pubmaticAutoRefresh';
 
 // TEST slot-level-config related changes
 
-// implement excludeCallbackFunction check
+// TEST excludeCallbackFunction check
 
 // listen to pbjs event to capture pbjs ad-unit with params store it in different map
 
@@ -95,7 +95,7 @@ let DEFAULT_CONFIG = {
 	},
 
 	// a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
-	excludeCallbackFunction: function(gptSlot){
+	excludeCallbackFunction: function(gptSlot){ //todo: chnage name?
 		return false;
 	},
 
@@ -188,6 +188,12 @@ function gptSlotRenderEndedHandler(event) {
 	// todo: do we need a special handeling for an empty creative?
 	let gptSlot = event.slot;
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
+
+	if(isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true){
+		logMessage('Excluding the gptSlotName', gptSlotName, ' from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+		return;
+	}
+
 	const slotConf = getSlotLevelConfig(gptSlotName);
 
 	DB[gptSlotName] = DB[gptSlotName] || createDefaultDbEntry();
@@ -207,6 +213,12 @@ function gptSlotRenderEndedHandler(event) {
 function gptSlotVisibilityChangedHandler(event) {
 	var gptSlot = event.slot;
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
+
+	if(isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true){
+		logMessage('Excluding the gptSlotName', gptSlotName, ' from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+		return;
+	}
+
 	let dbEntry = getDbEntry(gptSlotName);
 	if(dbEntry === null){
 		return
