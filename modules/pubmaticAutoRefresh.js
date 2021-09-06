@@ -3,7 +3,7 @@
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
-import { mergeDeep, logMessage, pick, timestamp } from '../src/utils.js';
+import { mergeDeep, logMessage, logWarn, pick, timestamp } from '../src/utils.js';
 
 const MODULE_NAME = 'pubmaticAutoRefresh';
 
@@ -50,6 +50,10 @@ const MODULE_NAME = 'pubmaticAutoRefresh';
 // move strings (key names) to local consts
 
 // change DB/Db to DataStore
+
+// logMessage vs logInfo vs logWarn
+
+// remove excludeSlotIds and excludeSizes?
 
 
 let DEFAULT_CONFIG = {
@@ -232,10 +236,9 @@ function init(){
 			googletag.pubads().addEventListener('slotVisibilityChanged', gptSlotVisibilityChangedHandler);
 		});
 	}else{
-		logMessage(MODULE_NAME, 'is included and not enbaled.');
+		logWarn(MODULE_NAME, 'is included but not enbaled.');
 	}
 }
 
 // beforeRequestBids
 events.on(EVENTS.BEFORE_REQUEST_BIDS, init);
-
