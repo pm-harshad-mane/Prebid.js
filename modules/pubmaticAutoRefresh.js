@@ -4,10 +4,11 @@ import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
 import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn } from '../src/utils.js';
-
+import { getGlobal } from '../src/prebidGlobal.js';
+import find from 'core-js-pure/features/array/find.js';
 const MODULE_NAME = 'pubmaticAutoRefresh';
-
-
+let pbjsAuctionTimeoutFromLastAuction;
+let BEFORE_REQUEST_BIDS_HANDLER_ADDED = false;
 // Todo
 
 /*
@@ -41,17 +42,17 @@ const MODULE_NAME = 'pubmaticAutoRefresh';
 
 // TEST excludeCallbackFunction check
 
-// listen to pbjs event to capture pbjs ad-unit with params store it in different map
+// implement proper callback with pbjs and gpt
 
-// support the callbacks, with argument like [{gpt: {}, pbjs: {}, KV: {k1: v1, k2: v2}}]
-
-// use targeting to set key values on the gptSlots?
+// on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
 
 // move strings (key names) to local consts
 
 // change DB/Db to DataStore
 
-// logMessage vs logInfo vs logWarn
+// review the all logs
+
+// logMessage vs logInfo vs logWarn, add prefix of modulename from a coomon function :p
 
 // Remove excludeSlotIds and excludeSizes? Yes better to implement the function with own priorities;  mention in confluence doc!
 
@@ -79,8 +80,23 @@ let DEFAULT_CONFIG = {
 	kvKeyForRefreshCount: 'autorefreshcount',
 
 	// a function; the default callback function
-	callbackFunction: function(gptSlotName){
-		logMessage('time to refresh', gptSlotName);
+	callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KV){
+		logMessage('time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
+		// set the key-value pairs for auto-refresh functionality
+		Object.keys(KV).forEach(key => gptSlot.setTargeting(key, KV[key]));
+
+
+		getGlobal().requestBids({
+			timeout: pbjsAuctionTimeoutFromLastAuction,
+			adUnits: [pbjsAdUnit],
+			bidsBackHandler: function(){
+				// refreshing the GPT slot
+				logMessage(MODULE_NAME, 'in bidsBackHandler... refreshing GPT slot', gptSlotName);
+				window.googletag.pubads().refresh([gptSlot]);
+			}
+		});
+
+		//todo: need to implent a failsafe approach to handle failure of pbjs
 	},
 
 	// a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
@@ -89,9 +105,8 @@ let DEFAULT_CONFIG = {
 	},
 
 	// a function; this function will help find the GPT gptSlots matching PBJS AdUnit
-	gptSlotToPbjsAdUnitMapFunction: function(gptSlot){
-		// todo: we want adUnitId not divId
-		return gptSlot.getSlotElementId();
+	gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU){
+		return(gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)
 	},
 
 	// a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
@@ -151,7 +166,7 @@ function getDbEntry(gptSlotName) {
 	return dbEntry
 }
 
-function refreshSlotIfNeeded(gptSlotName){
+function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	const slotConf = getSlotLevelConfig(gptSlotName);
 	let dbEntry = getDbEntry(gptSlotName);
 	if(dbEntry === null){
@@ -178,10 +193,26 @@ function refreshSlotIfNeeded(gptSlotName){
 		logMessage(gptSlotName, ': not refreshing since the gptSlot refresh request is in progress');
 		return
 	}
+
+	// find the pbjsAdUnit and pass it
+	let pbjsAdUnit = find(getGlobal().adUnits,
+	    pbjsAU => slotConf.gptSlotToPbjsAdUnitMapFunction(gptSlotName, gptSlot, pbjsAU)
+	) || null;
+	
+	if(pbjsAdUnit === null){
+		logMessage(gptSlotName, ': not refreshing since the matching pbjsAdUnit was not found');
+		return;
+	}
+
+	// generate KVs to be added for auto-refresh functionality
+	let KV = {};
+	KV[slotConf['kvKeyForRefresh']] = slotConf['kvValueForRefresh'];
+	KV[slotConf['kvKeyForRefreshCount']] = dbEntry['renderedCount']; // this is the Nth refresh
 	
 	dbEntry['refreshRequested'] = true;
-	
-	slotConf.callbackFunction(gptSlotName); // decide what to pass (gptSlot, pbjsAdUnit)
+
+	 // todo: decide what to pass (gptSlot, pbjsAdUnit, KV pairs)
+	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KV);
 }
 
 function gptSlotRenderEndedHandler(event) {
@@ -229,6 +260,15 @@ function gptSlotVisibilityChangedHandler(event) {
 }
 
 function init(){
+
+	if(BEFORE_REQUEST_BIDS_HANDLER_ADDED === true){
+		logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS event listener already added, no need to add again');
+		return;
+	}
+
+	BEFORE_REQUEST_BIDS_HANDLER_ADDED = true;
+
+	logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS', arguments);
 	mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
 	if(CONFIG.enabled === true){
 		DEFAULT_SLOT_CONFIG = pick(CONFIG, [
@@ -238,7 +278,8 @@ function init(){
 			'kvKeyForRefresh',
 			'kvValueForRefresh',
 			'kvKeyForRefreshCount',
-			'callbackFunction'
+			'callbackFunction',
+			'gptSlotToPbjsAdUnitMapFunction'
 		]);
 		logMessage(MODULE_NAME, ' applicable Config is :', CONFIG);
 		logMessage(MODULE_NAME, ' applicable DEFAULT_SLOT_CONFIG is :', DEFAULT_SLOT_CONFIG);
@@ -252,5 +293,8 @@ function init(){
 	}
 }
 
-// beforeRequestBids
 events.on(EVENTS.BEFORE_REQUEST_BIDS, init);
+events.on(EVENTS.AUCTION_INIT, function(){
+	logMessage(MODULE_NAME, 'AUCTION_INIT', arguments);
+	pbjsAuctionTimeoutFromLastAuction = arguments[0].timeout;
+});
