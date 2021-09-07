@@ -3,44 +3,16 @@
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
-import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn } from '../src/utils.js';
+import { mergeDeep, logMessage, logWarn, pick, timestamp, isFn, isArray } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
 import find from 'core-js-pure/features/array/find.js';
+
 const MODULE_NAME = 'pubmaticAutoRefresh';
+
 let pbjsAuctionTimeoutFromLastAuction;
-let BEFORE_REQUEST_BIDS_HANDLER_ADDED = false;
+let beforeRequestBidsHandlerAdded = false;
+
 // Todo
-
-/*
-	{
-		refreshDelay: 30,
-		minimumViewPercentage: 70,
-		maximumRefreshCount: 3,
-		callbackFunction: function() // default: init pbjs auction and init GPT auction
-
-		slotIdFunction: function(slot) {} // default value is return slot.getSlotElementId();
-
-		excludeCallbackFunction: function() if function returns true that means we exclude this slot from refresh functionality
-		excludeSlotIds: ['haa-haa-haaa', 'bla-bla'],
-		excludeSizes: ['300x250', '720x90'],			
-		
-		customConfig: {
-			'slot-id-1': {
-				refreshDelay: 10,
-				minimumViewPercentage
-				maximumRefreshCount: 5,	
-				kvKeyForRefresh: 'autorefresh_ed',
-				kvValueForRefresh: '100',
-				kvKeyForRefreshCount: 'auto_refresh_count',
-				callbackFunction: customFunction()
-			}
-		}
-	}
-*/
-
-// TEST slot-level-config related changes
-
-// TEST excludeCallbackFunction check
 
 // implement proper callback with pbjs and gpt with fail-safe
 
@@ -48,11 +20,9 @@ let BEFORE_REQUEST_BIDS_HANDLER_ADDED = false;
 
 // on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
 
-// review the all logs
+// review the all logs, remove unnecessary ones
 
-// logMessage vs logInfo vs logWarn, add prefix of modulename from a coomon function :p
-
-// Remove excludeSlotIds and excludeSizes? Yes better to implement the function with own priorities;  mention in confluence doc!
+// logMessage vs logInfo vs logWarn
 
 
 let DEFAULT_CONFIG = {
@@ -79,7 +49,7 @@ let DEFAULT_CONFIG = {
 
 	// a function; the default callback function
 	callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs){
-		logMessage('time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
+		logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
 		// set the key-value pairs for auto-refresh functionality
 		Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
 
@@ -108,7 +78,23 @@ let DEFAULT_CONFIG = {
 	},
 
 	// a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
-	excludeCallbackFunction: function(gptSlot){ //todo: chnage name?
+	excludeCallbackFunction: function(gptSlotName, gptSlot){ //todo: chnage name?
+		
+		// first check if gptSlotName is present in CONFIG.excludeSlotIds array
+		if(isArray(CONFIG.excludeSlotIds) && CONFIG.excludeSlotIds.indexOf(gptSlotName) !== -1){
+			logMessage(MODULE_NAME, 'Excluding ', gptSlotName, 'as per CONFIG.excludeSlotIds,', CONFIG.excludeSlotIds);
+			return true;
+		}
+
+		if(isArray(CONFIG.excludeSizes)){
+			const gptSlotSizes = gptSlot.getSizes(window.innerWidth, window.innerHeight).map(e => e.width + 'x' + e.height);
+			const found = gptSlotSizes.some( size => CONFIG.excludeSizes.indexOf(size) !== -1);
+			if(found === true){
+				logMessage(MODULE_NAME, 'Excluding ', gptSlotName, 'with sizes,', gptSlotSizes, 'as per CONFIG.excludeSizes,', CONFIG.excludeSizes);
+				return true;
+			}
+		}
+
 		return false;
 	},
 
@@ -158,7 +144,7 @@ function createDefaultDbEntry(){
 function getDataStoreEntry(gptSlotName) {
 	let dsEntry = DataStore[gptSlotName] || null;
 	if(dsEntry === null){
-		logMessage('DataStore entry not found for', gptSlotName);			
+		logMessage(MODULE_NAME, 'DataStore entry not found for', gptSlotName);			
 	}
 	return dsEntry
 }
@@ -167,27 +153,27 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	const slotConf = getSlotLevelConfig(gptSlotName);
 	let dsEntry = getDataStoreEntry(gptSlotName);
 	if(dsEntry === null){
-		logMessage(gptSlotName, ': not refreshing since the gptSlot details are not found in local db');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot details are not found in local db');
 		return
 	}
 
 	if( dsEntry['renderedCount'] >= (slotConf.maximumRefreshCount+1) ){
-		logMessage(gptSlotName, ': not refreshing since the gptSlot is already renderd', dsEntry['renderedCount'], 'times');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot is already renderd', dsEntry['renderedCount'], 'times');
 		return
 	}
 
 	if(dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage ){
-		logMessage(gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
 		return
 	}
 
 	if( timestamp() - dsEntry['lastRenderedAt'] < (slotConf.refreshDelay) ){
-		logMessage(gptSlotName, ': not refreshing since the gptSlot was rendered recently');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot was rendered recently');
 		return
 	}
 
 	if( dsEntry['refreshRequested'] === true ){
-		logMessage(gptSlotName, ': not refreshing since the gptSlot refresh request is in progress');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot refresh request is in progress');
 		return
 	}
 
@@ -197,7 +183,7 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	) || null;
 	
 	if(pbjsAdUnit === null){
-		logMessage(gptSlotName, ': not refreshing since the matching pbjsAdUnit was not found');
+		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the matching pbjsAdUnit was not found');
 		return;
 	}
 
@@ -217,7 +203,7 @@ function gptSlotRenderEndedHandler(event) {
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
 	if(isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true){
-		logMessage('Excluding the gptSlotName', gptSlotName, ' from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+		logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, 'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
 		return;
 	}
 
@@ -229,10 +215,10 @@ function gptSlotRenderEndedHandler(event) {
 	DataStore[gptSlotName]['inViewPercentage'] = 0;
 	DataStore[gptSlotName]['refreshRequested'] = false;
 
-	logMessage('Slot', gptSlotName, 'finished rendering.');
+	logMessage(MODULE_NAME, 'Slot', gptSlotName, 'finished rendering.');
 
 	setTimeout(function(gptSlotName, gptSlot){
-		logMessage('after setTimeout', gptSlotName);
+		logMessage(MODULE_NAME, 'after setTimeout', gptSlotName);
 		refreshSlotIfNeeded(gptSlotName, gptSlot);
 	}, slotConf.refreshDelay, gptSlotName, gptSlot);
 }
@@ -242,7 +228,7 @@ function gptSlotVisibilityChangedHandler(event) {
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
 	if(isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true){
-		logMessage('Excluding the gptSlotName', gptSlotName, ' from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+		logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, ' from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
 		return;
 	}
 
@@ -251,18 +237,18 @@ function gptSlotVisibilityChangedHandler(event) {
 		return
 	}
 	dsEntry['inViewPercentage'] = event.inViewPercentage;
-	logMessage('Visibility of gptSlot', gptSlotName, 'changed.', 'Visible area:', event.inViewPercentage + '%');
+	logMessage(MODULE_NAME, 'Visibility of gptSlot', gptSlotName, 'changed.', 'Visible area:', event.inViewPercentage + '%');
 	refreshSlotIfNeeded(gptSlotName, gptSlot);
 }
 
 function init(){
 
-	if(BEFORE_REQUEST_BIDS_HANDLER_ADDED === true){
+	if(beforeRequestBidsHandlerAdded === true){
 		logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS event listener already added, no need to add again');
 		return;
 	}
 
-	BEFORE_REQUEST_BIDS_HANDLER_ADDED = true;
+	beforeRequestBidsHandlerAdded = true;
 
 	logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS', arguments);
 	mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
@@ -290,7 +276,4 @@ function init(){
 }
 
 events.on(EVENTS.BEFORE_REQUEST_BIDS, init);
-events.on(EVENTS.AUCTION_INIT, function(){
-	logMessage(MODULE_NAME, 'AUCTION_INIT', arguments);
-	pbjsAuctionTimeoutFromLastAuction = arguments[0].timeout;
-});
+events.on(EVENTS.AUCTION_INIT, () => { pbjsAuctionTimeoutFromLastAuction = arguments[0].timeout });
