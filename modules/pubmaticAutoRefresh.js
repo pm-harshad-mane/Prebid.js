@@ -14,7 +14,6 @@ let pbjsAuctionTimeoutFromLastAuction;
 let beforeRequestBidsHandlerAdded = false;
 
 // Todo
-// implement proper callback with pbjs and gpt with fail-safe
 // move strings (key names) to local consts
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
@@ -43,22 +42,35 @@ let DEFAULT_CONFIG = {
 
 	// a function; the default callback function
 	callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs){
+
 		logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
+
 		// set the key-value pairs for auto-refresh functionality
 		Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
 
+		let adServerInitiated = false;
+
+		let initAdServer = function(){
+			if(adServerInitiated === true) {
+				logMessage(MODULE_NAME, 'initAdServer already called for', gptSlotName);
+				return;
+			}
+			adServerInitiated = true;
+			logMessage(MODULE_NAME, 'refreshing GPT slot', gptSlotName);
+			window.googletag.pubads().refresh([gptSlot]);
+		}
 
 		getGlobal().requestBids({
 			timeout: pbjsAuctionTimeoutFromLastAuction,
 			adUnits: [pbjsAdUnit],
 			bidsBackHandler: function(){
-				// refreshing the GPT slot
-				logMessage(MODULE_NAME, 'in bidsBackHandler... refreshing GPT slot', gptSlotName);
-				window.googletag.pubads().refresh([gptSlot]);
+				logMessage(MODULE_NAME, 'In bidsBackHandler for', gptSlotName);
+				initAdServer();				
 			}
 		});
 
-		//todo: need to implent a failsafe approach to handle failure of pbjs
+		// to make sure we call initAdServer even when PrebidJS fails to execute bidsBackHandler
+		setTimeout(initAdServer, pbjsAuctionTimeoutFromLastAuction+100)
 	},
 
 	// a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
