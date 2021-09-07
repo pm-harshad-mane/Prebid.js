@@ -16,7 +16,6 @@ let beforeRequestBidsHandlerAdded = false;
 // Todo
 // implement proper callback with pbjs and gpt with fail-safe
 // move strings (key names) to local consts
-// on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
 
@@ -144,18 +143,12 @@ function getDataStoreEntry(gptSlotName) {
 	return dsEntry
 }
 
-function refreshSlotIfNeeded(gptSlotName, gptSlot){
-	const slotConf = getSlotLevelConfig(gptSlotName);
-	let dsEntry = getDataStoreEntry(gptSlotName);
+function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf){
+	
 	if(dsEntry === null){
 		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot details are not found in local db');
 		return
-	}
-
-	if( dsEntry['renderedCount'] >= (slotConf.maximumRefreshCount+1) ){
-		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot is already renderd', dsEntry['renderedCount'], 'times');
-		return
-	}
+	}	
 
 	if(dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage ){
 		logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
@@ -192,18 +185,24 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs);
 }
 
+function isGptSlotMaxRefreshCountReached(gptSlotName, currentRenderedCount, confMaxRefreshCount){
+	if( currentRenderedCount >= (confMaxRefreshCount+1) ){
+		return true;
+	}
+	return false;
+}
+
 function gptSlotRenderEndedHandler(event) {
 
 	// todo: do we need a special handeling for an empty creative?
+
 	let gptSlot = event.slot;
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
 	if(isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true){
 		logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, 'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
 		return;
-	}
-
-	const slotConf = getSlotLevelConfig(gptSlotName);
+	}	
 
 	DataStore[gptSlotName] = DataStore[gptSlotName] || createDefaultDbEntry();
 	DataStore[gptSlotName]['lastRenderedAt'] = timestamp();
@@ -211,9 +210,15 @@ function gptSlotRenderEndedHandler(event) {
 	DataStore[gptSlotName]['inViewPercentage'] = 0;
 	DataStore[gptSlotName]['refreshRequested'] = false;
 
-	setTimeout(function(gptSlotName, gptSlot){
-		refreshSlotIfNeeded(gptSlotName, gptSlot);
-	}, slotConf.refreshDelay, gptSlotName, gptSlot);
+	const slotConf = getSlotLevelConfig(gptSlotName);
+	
+	if(isGptSlotMaxRefreshCountReached(gptSlotName, DataStore[gptSlotName]['renderedCount'], slotConf.maximumRefreshCount) === true){
+		return;
+	}
+
+	setTimeout(function(){
+		refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
+	}, slotConf.refreshDelay);
 }
 
 function gptSlotVisibilityChangedHandler(event) {
@@ -229,9 +234,16 @@ function gptSlotVisibilityChangedHandler(event) {
 	if(dsEntry === null){
 		return
 	}
-	
+
 	dsEntry['inViewPercentage'] = event.inViewPercentage;
-	refreshSlotIfNeeded(gptSlotName, gptSlot);
+
+	const slotConf = getSlotLevelConfig(gptSlotName);
+
+	if(isGptSlotMaxRefreshCountReached(gptSlotName, dsEntry['renderedCount'], slotConf.maximumRefreshCount) === true){
+		return;
+	}
+
+	refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
 }
 
 function init(){
