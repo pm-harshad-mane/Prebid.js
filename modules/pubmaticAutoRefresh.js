@@ -1,4 +1,5 @@
-// This module will work with GPT only. It will refresh the ad-slots as per the given config.
+// This module will work with GPT only. 
+// The module will refresh the GPT ad-slots as per the given config.
 
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
@@ -13,17 +14,11 @@ let pbjsAuctionTimeoutFromLastAuction;
 let beforeRequestBidsHandlerAdded = false;
 
 // Todo
-
 // implement proper callback with pbjs and gpt with fail-safe
-
 // move strings (key names) to local consts
-
 // on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
-
 // review the all logs, remove unnecessary ones
-
 // logMessage vs logInfo vs logWarn
-
 
 let DEFAULT_CONFIG = {
 
@@ -198,6 +193,7 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 }
 
 function gptSlotRenderEndedHandler(event) {
+
 	// todo: do we need a special handeling for an empty creative?
 	let gptSlot = event.slot;
 	const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
@@ -215,10 +211,7 @@ function gptSlotRenderEndedHandler(event) {
 	DataStore[gptSlotName]['inViewPercentage'] = 0;
 	DataStore[gptSlotName]['refreshRequested'] = false;
 
-	logMessage(MODULE_NAME, 'Slot', gptSlotName, 'finished rendering.');
-
 	setTimeout(function(gptSlotName, gptSlot){
-		logMessage(MODULE_NAME, 'after setTimeout', gptSlotName);
 		refreshSlotIfNeeded(gptSlotName, gptSlot);
 	}, slotConf.refreshDelay, gptSlotName, gptSlot);
 }
@@ -236,23 +229,26 @@ function gptSlotVisibilityChangedHandler(event) {
 	if(dsEntry === null){
 		return
 	}
+	
 	dsEntry['inViewPercentage'] = event.inViewPercentage;
-	logMessage(MODULE_NAME, 'Visibility of gptSlot', gptSlotName, 'changed.', 'Visible area:', event.inViewPercentage + '%');
 	refreshSlotIfNeeded(gptSlotName, gptSlot);
 }
 
 function init(){
 
 	if(beforeRequestBidsHandlerAdded === true){
-		logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS event listener already added, no need to add again');
+		// BEFORE_REQUEST_BIDS event listener already added, no need to add again
 		return;
 	}
 
 	beforeRequestBidsHandlerAdded = true;
 
-	logMessage(MODULE_NAME, 'BEFORE_REQUEST_BIDS', arguments);
+	// CONFIG = DEFAULT_CONFIG + Provided module config (higher priority)
 	mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
+
 	if(CONFIG.enabled === true){
+
+		// Generate default slot config that will be applied if customConfig for a GPT slot is not found
 		DEFAULT_SLOT_CONFIG = pick(CONFIG, [
 			'refreshDelay',
 			'minimumViewPercentage',
@@ -263,13 +259,17 @@ function init(){
 			'callbackFunction',
 			'gptSlotToPbjsAdUnitMapFunction'
 		]);
+
 		logMessage(MODULE_NAME, ' applicable Config is :', CONFIG);
 		logMessage(MODULE_NAME, ' applicable DEFAULT_SLOT_CONFIG is :', DEFAULT_SLOT_CONFIG);
+		
+		// Add GPT event listeners
 		window.googletag = window.googletag || {cmd: []};
 		googletag.cmd.push(function() {
 			googletag.pubads().addEventListener('slotRenderEnded', gptSlotRenderEndedHandler);
 			googletag.pubads().addEventListener('slotVisibilityChanged', gptSlotVisibilityChangedHandler);
 		});
+
 	}else{
 		logWarn(MODULE_NAME, 'is included but not enbaled.');
 	}
