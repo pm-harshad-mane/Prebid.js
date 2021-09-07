@@ -42,13 +42,13 @@ let BEFORE_REQUEST_BIDS_HANDLER_ADDED = false;
 
 // TEST excludeCallbackFunction check
 
-// implement proper callback with pbjs and gpt
+// implement proper callback with pbjs and gpt with fail-safe
 
-// on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
+// change KV var name
 
 // move strings (key names) to local consts
 
-// change DB/Db to DataStore
+// on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
 
 // review the all logs
 
@@ -129,8 +129,7 @@ let DEFAULT_SLOT_CONFIG = {}; // this will be set from the CONFIG
 // this object will hold the run-time config to be used after merging input-config and default-config
 let CONFIG = {};
 
-
-let DB = {};
+let DataStore = {};
 
 function getSlotLevelConfig(gptSlotName){
 
@@ -158,38 +157,38 @@ function createDefaultDbEntry(){
 	};
 }
 
-function getDbEntry(gptSlotName) {
-	let dbEntry = DB[gptSlotName] || null;
-	if(dbEntry === null){
-		logMessage('DB entry not found for', gptSlotName);			
+function getDataStoreEntry(gptSlotName) {
+	let dsEntry = DataStore[gptSlotName] || null;
+	if(dsEntry === null){
+		logMessage('DataStore entry not found for', gptSlotName);			
 	}
-	return dbEntry
+	return dsEntry
 }
 
 function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	const slotConf = getSlotLevelConfig(gptSlotName);
-	let dbEntry = getDbEntry(gptSlotName);
-	if(dbEntry === null){
+	let dsEntry = getDataStoreEntry(gptSlotName);
+	if(dsEntry === null){
 		logMessage(gptSlotName, ': not refreshing since the gptSlot details are not found in local db');
 		return
 	}
 
-	if( dbEntry['renderedCount'] >= (slotConf.maximumRefreshCount+1) ){
-		logMessage(gptSlotName, ': not refreshing since the gptSlot is already renderd', dbEntry['renderedCount'], 'times');
+	if( dsEntry['renderedCount'] >= (slotConf.maximumRefreshCount+1) ){
+		logMessage(gptSlotName, ': not refreshing since the gptSlot is already renderd', dsEntry['renderedCount'], 'times');
 		return
 	}
 
-	if(dbEntry['inViewPercentage'] < slotConf.minimumViewPercentage ){
+	if(dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage ){
 		logMessage(gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
 		return
 	}
 
-	if( timestamp() - dbEntry['lastRenderedAt'] < (slotConf.refreshDelay) ){
+	if( timestamp() - dsEntry['lastRenderedAt'] < (slotConf.refreshDelay) ){
 		logMessage(gptSlotName, ': not refreshing since the gptSlot was rendered recently');
 		return
 	}
 
-	if( dbEntry['refreshRequested'] === true ){
+	if( dsEntry['refreshRequested'] === true ){
 		logMessage(gptSlotName, ': not refreshing since the gptSlot refresh request is in progress');
 		return
 	}
@@ -207,9 +206,9 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	// generate KVs to be added for auto-refresh functionality
 	let KV = {};
 	KV[slotConf['kvKeyForRefresh']] = slotConf['kvValueForRefresh'];
-	KV[slotConf['kvKeyForRefreshCount']] = dbEntry['renderedCount']; // this is the Nth refresh
+	KV[slotConf['kvKeyForRefreshCount']] = dsEntry['renderedCount']; // this is the Nth refresh
 	
-	dbEntry['refreshRequested'] = true;
+	dsEntry['refreshRequested'] = true;
 
 	 // todo: decide what to pass (gptSlot, pbjsAdUnit, KV pairs)
 	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KV);
@@ -227,11 +226,11 @@ function gptSlotRenderEndedHandler(event) {
 
 	const slotConf = getSlotLevelConfig(gptSlotName);
 
-	DB[gptSlotName] = DB[gptSlotName] || createDefaultDbEntry();
-	DB[gptSlotName]['lastRenderedAt'] = timestamp();
-	DB[gptSlotName]['renderedCount']++;
-	DB[gptSlotName]['inViewPercentage'] = 0;
-	DB[gptSlotName]['refreshRequested'] = false;
+	DataStore[gptSlotName] = DataStore[gptSlotName] || createDefaultDbEntry();
+	DataStore[gptSlotName]['lastRenderedAt'] = timestamp();
+	DataStore[gptSlotName]['renderedCount']++;
+	DataStore[gptSlotName]['inViewPercentage'] = 0;
+	DataStore[gptSlotName]['refreshRequested'] = false;
 
 	logMessage('Slot', gptSlotName, 'finished rendering.');
 
@@ -250,11 +249,11 @@ function gptSlotVisibilityChangedHandler(event) {
 		return;
 	}
 
-	let dbEntry = getDbEntry(gptSlotName);
-	if(dbEntry === null){
+	let dsEntry = getDataStoreEntry(gptSlotName);
+	if(dsEntry === null){
 		return
 	}
-	dbEntry['inViewPercentage'] = event.inViewPercentage;
+	dsEntry['inViewPercentage'] = event.inViewPercentage;
 	logMessage('Visibility of gptSlot', gptSlotName, 'changed.', 'Visible area:', event.inViewPercentage + '%');
 	refreshSlotIfNeeded(gptSlotName, gptSlot);
 }
