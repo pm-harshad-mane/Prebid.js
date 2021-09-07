@@ -208,7 +208,6 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	
 	dsEntry['refreshRequested'] = true;
 
-	 // todo: decide what to pass (gptSlot, pbjsAdUnit, KeyValuePairs)
 	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs);
 }
 
