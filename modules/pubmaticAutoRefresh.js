@@ -14,6 +14,10 @@ let pbjsAuctionTimeoutFromLastAuction;
 let beforeRequestBidsHandlerAdded = false;
 
 // Todo
+// should we change from last-rendered to last-seen to start the counter?
+  // makes more sense else the slots may refresh as it becomes visible
+  // consider minimumViewPercentage in starting the counter 
+  // remove minimumViewPercentage check while refreshing?  
 // move strings (key names) to local consts
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
