@@ -44,8 +44,6 @@ let BEFORE_REQUEST_BIDS_HANDLER_ADDED = false;
 
 // implement proper callback with pbjs and gpt with fail-safe
 
-// change KV var name
-
 // move strings (key names) to local consts
 
 // on viewability chnage if slot is already refreshed N times then do not add log saying "already rendered N times"
@@ -80,10 +78,10 @@ let DEFAULT_CONFIG = {
 	kvKeyForRefreshCount: 'autorefreshcount',
 
 	// a function; the default callback function
-	callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KV){
+	callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs){
 		logMessage('time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
 		// set the key-value pairs for auto-refresh functionality
-		Object.keys(KV).forEach(key => gptSlot.setTargeting(key, KV[key]));
+		Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
 
 
 		getGlobal().requestBids({
@@ -204,14 +202,14 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot){
 	}
 
 	// generate KVs to be added for auto-refresh functionality
-	let KV = {};
-	KV[slotConf['kvKeyForRefresh']] = slotConf['kvValueForRefresh'];
-	KV[slotConf['kvKeyForRefreshCount']] = dsEntry['renderedCount']; // this is the Nth refresh
+	let KeyValuePairs = {};
+	KeyValuePairs[slotConf['kvKeyForRefresh']] = slotConf['kvValueForRefresh'];
+	KeyValuePairs[slotConf['kvKeyForRefreshCount']] = dsEntry['renderedCount']; // this is the Nth refresh
 	
 	dsEntry['refreshRequested'] = true;
 
-	 // todo: decide what to pass (gptSlot, pbjsAdUnit, KV pairs)
-	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KV);
+	 // todo: decide what to pass (gptSlot, pbjsAdUnit, KeyValuePairs)
+	slotConf.callbackFunction(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs);
 }
 
 function gptSlotRenderEndedHandler(event) {
