@@ -49,7 +49,7 @@ let DEFAULT_CONFIG = {
   enabled: false,
 
   // how many times we should refresh the ad-gptSlot after it is rendered
-  maximumRefreshCount: 3,
+  maximumRefreshCount: 999,
 
   // delay in ms after which the gptSlot to refresh
   refreshDelay: 30000,

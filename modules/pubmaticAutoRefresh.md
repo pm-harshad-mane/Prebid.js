@@ -7,11 +7,11 @@
 # Config
 | Param               | Data type | Default value | Usage |
 |---------------------|-----------|----------------|------------------------------------------|
-| enabled             | boolean   | false          | must be set to true to enable the module |
-| maximumRefreshCount | int       | 3              | how many times the slot must be refreshed after it is rendered for the first time |
-| countdownDuration   | int       | 30000          | time in milliseconds|
-| startCountdownWithMinimumViewabilityPercentage | int (0-100) | 0 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
-| refreshAdSlotWithMinimumViewabilityPercentag | int | 0 (0-100)| the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
+| enabled             | boolean   | false | must be set to true to enable the module |
+| maximumRefreshCount | int       | 999 | how many times the slot must be refreshed after it is rendered for the first time |
+| countdownDuration   | int       | 30000 | time in milliseconds|
+| startCountdownWithMinimumViewabilityPercentage | int (0-100) | 50 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
+| refreshAdSlotWithMinimumViewabilityPercentag | int (0-100) | 50 | the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
 | kvKeyForRefresh | string | 'autorefresh' | this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it |
 | kvValueForRefresh | string | '1' | this value will be added for the key kvKeyForRefresh on the gptSlot |
 | kvKeyForRefreshCount | string | 'autorefreshcount' | this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it |
