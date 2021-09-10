@@ -48,11 +48,11 @@ let DEFAULT_CONFIG = {
 
   enabled: false,
 
-  // delay in ms after which the gptSlot to refresh
-  refreshDelay: 30000,
-
   // how many times we should refresh the ad-gptSlot after it is rendered
   maximumRefreshCount: 3,
+
+  // delay in ms after which the gptSlot to refresh
+  refreshDelay: 30000,
 
   // set it to 0 to refresh all gptSlots w/o visibility percentage check
   minimumViewPercentage: 70,
@@ -128,10 +128,10 @@ let DEFAULT_CONFIG = {
     return false;
   },
 
-  // an array; if excludeCallbackFunction is not set then we will look into this array for gptSlotId if found then the gptSlot will be ignored
+  // an array; in excludeCallbackFunction we will look into this array for gptSlotId if found then the gptSlot will be ignored
   excludeSlotIds: undefined,
 
-  // an array; if excludeCallbackFunction is not set then we will look into this array for gptSlot size WxH (300x250) if found then the gptSlot will be ignored
+  // an array; in excludeCallbackFunction we will look into this array for gptSlot size WxH (300x250) if found then the gptSlot will be ignored
   excludeSizes: undefined,
 
   // an object of objects;
