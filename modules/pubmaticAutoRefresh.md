@@ -94,17 +94,66 @@ pbjs.setConfig({
 });
 ```
 
+- Do not refresh GPT ad slot with given sizes (if any one size matches then slot will not be refreshed)
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        excludeSizes: [ '300x250', '300x300']
+    }
+});
+```
+
+- Do not refresh GPT ad slot that matches my custom logic
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        excludeCallbackFunction: function(gptSlotName, gptSlot){
+        	// gptSlotName is derived as per slotIdFunctionForCustomConfig
+        	// custom logic goes here
+        	// return true to exclude
+        	// return false to not exclude
+        }
+    }
+});
+```
+
+- Change key value pairs to be used
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        kvKeyForRefresh: 'pm-auto-refresh',
+        kvValueForRefresh: 'true',
+        kvKeyForRefreshCount: 'auto-refresh-cnt'
+    }
+});
+```
 
 
-- Apply same config for all GPT ad-slots but want to have different config for some slots
-
-- Add key-value pairs to the GPT ad-slots before refreshing to notify the count of refresh impression
+- Refresh all ad-slots with default countdownDuration, but for Div-1 and Div-2 use countdownDuration = 10000
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        customConfig: {
+        	'Div-1': {
+        		countdownDuration: 10000
+        	},
+        	'Div-2': {
+        		countdownDuration: 10000
+        	}
+        }
+    }
+});
+```
 
 - Callback function to take control of refreshing
 
-- Exclusion list based on GPT ad-slot ID and GPT ad-slot sizes
-- Provision for custom exclusion function
+- Change logic to generate gptSlotName
 
+- Change logic to find respective PBJS adUnit for my GPT ad-slot
 
 # Drwaback
 - only onle slot is handled at a time
