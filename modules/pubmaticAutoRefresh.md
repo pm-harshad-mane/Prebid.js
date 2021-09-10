@@ -106,7 +106,5 @@ pbjs.setConfig({
 - Provision for custom exclusion function
 
 
-- Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
-
 # Drwaback
 - only onle slot is handled at a time
