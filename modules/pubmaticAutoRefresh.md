@@ -1,4 +1,7 @@
-pubmaticAutoRefresh
+# pubmaticAutoRefresh
+- This module will work with GPT only.
+- The module will refresh the GPT ad-slots as per the given config.
+- Before refreshing GPT ad-slot, respective PBJS AdUnit is found by the module and new bids are fetched by PBJS and then the GPT ads-lot is refreshed, with a failsafe.
 
 
 # Config
@@ -22,8 +25,6 @@ pubmaticAutoRefresh
 
 
 # Use Cases
-
-- Before refreshing GPT ad-slot, respective PBJS AdUnit is found by the module and new bids are fetched by PBJS and then the GPT ads-lot is refreshed, with a failsafe.
 
 - Refresh all GPT ad-slots after every 30 seconds
 - Refresh all GPT ad-slots after 30 seconds, maximum 2 times
