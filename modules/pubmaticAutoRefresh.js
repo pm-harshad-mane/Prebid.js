@@ -14,13 +14,35 @@ let pbjsAuctionTimeoutFromLastAuction;
 let beforeRequestBidsHandlerAdded = false;
 
 // Todo
-// should we change from last-rendered to last-seen to start the counter?
-  // makes more sense else the slots may refresh as it becomes visible
-  // consider minimumViewPercentage in starting the counter 
-  // remove minimumViewPercentage check while refreshing?  
+
 // move strings (key names) to local consts
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
+
+// few new flags
+  // startCountdownWithMinimumViewabilityPercentage:
+    // used exclusively to start the timer
+    // set to zero to start countdown when ad-slot is rendered
+    // if non zero then start the coundown only when realtime viewability number is more than input
+  // refreshAdSlotWithMinimumViewabilityPercentag:
+    // used exclusively to check if we should refresh now or not
+    // set 0 to refresh ad slot even when it is not visible
+    // if non zero then ad slot will refresh has more realtime viewability number than input
+  // rename refreshDelay to countdownDuration
+
+// few new fields in DS      
+  // hasCounterStarted true / false 
+    // do not restart counter if already started;
+    // reset the flag after display creative
+  // add counterStartedAt timestamp() for comparison than using lastRenderedAt
+
+// case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds irrespective of current viewability  
+  // startCountdownWithMinimumViewabilityPercentage: 50
+  // refreshAdSlotWithMinimumViewabilityPercentag: 0
+
+// case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
+  // startCountdownWithMinimumViewabilityPercentage: 50
+  // refreshAdSlotWithMinimumViewabilityPercentag: 50
 
 let DEFAULT_CONFIG = {
 
@@ -142,6 +164,7 @@ function getSlotLevelConfig(gptSlotName) {
 function createDefaultDbEntry() {
   return {
     lastRenderedAt: timestamp(),
+    lastVisibilityChangedAt: -1,
     renderedCount: 0,
     inViewPercentage: 0,
     refreshRequested: false
@@ -162,11 +185,13 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf) {
     return
   }
 
+  // consider refreshAdSlotWithMinimumViewabilityPercentag than inViewPercentage ; check <= for zero
   if (dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage) {
     logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
     return
   }
 
+  // use counterStartedAt than lastRenderedAt ; change log statement
   if (timestamp() - dsEntry['lastRenderedAt'] < (slotConf.refreshDelay)) {
     logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot was rendered recently');
     return
@@ -220,12 +245,23 @@ function gptSlotRenderEndedHandler(event) {
   DataStore[gptSlotName]['renderedCount']++;
   DataStore[gptSlotName]['inViewPercentage'] = 0;
   DataStore[gptSlotName]['refreshRequested'] = false;
+  // set hasCounterStarted to false
+  // set counterStartedAt to -1
 
   const slotConf = getSlotLevelConfig(gptSlotName);
 
   if (isGptSlotMaxRefreshCountReached(gptSlotName, DataStore[gptSlotName]['renderedCount'], slotConf.maximumRefreshCount) === true) {
     return;
   }
+
+  /*
+    if startCountdownWithMinimumViewabilityPercentage === 0 
+      then set hasCounterStarted = true
+      counterStartedAt = timestamp
+      use setTimeout( refreshSlotIfNeeded )
+    else
+      do nothing
+  */
 
   setTimeout(function() {
     refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
@@ -247,12 +283,23 @@ function gptSlotVisibilityChangedHandler(event) {
   }
 
   dsEntry['inViewPercentage'] = event.inViewPercentage;
+  dsEntry['lastVisibilityChangedAt'] = timestamp();
 
   const slotConf = getSlotLevelConfig(gptSlotName);
 
   if (isGptSlotMaxRefreshCountReached(gptSlotName, dsEntry['renderedCount'], slotConf.maximumRefreshCount) === true) {
     return;
   }
+
+  /*
+    if hasCounterStarted = false
+      if startCountdownWithMinimumViewabilityPercentage >= current       
+        set hasCounterStarted = true
+        counterStartedAt = timestamp
+        use setTimeout( refreshSlotIfNeeded )
+    else if hasCounterStarted = true
+      refreshSlotIfNeeded
+  */
 
   refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
 }
