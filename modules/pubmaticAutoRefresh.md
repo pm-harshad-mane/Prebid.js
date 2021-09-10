@@ -10,8 +10,8 @@
 | enabled             | boolean   | false          | must be set to true to enable the module |
 | maximumRefreshCount | int       | 3              | how many times the slot must be refreshed after it is rendered for the first time |
 | countdownDuration   | int       | 30000          | time in milliseconds|
-| startCountdownWithMinimumViewabilityPercentage | int | 0 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
-| refreshAdSlotWithMinimumViewabilityPercentag | int | 0 | the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
+| startCountdownWithMinimumViewabilityPercentage | int (0-100) | 0 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
+| refreshAdSlotWithMinimumViewabilityPercentag | int | 0 (0-100)| the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
 | kvKeyForRefresh | string | 'autorefresh' | this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it |
 | kvValueForRefresh | string | '1' | this value will be added for the key kvKeyForRefresh on the gptSlot |
 | kvKeyForRefreshCount | string | 'autorefreshcount' | this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it |
@@ -26,9 +26,75 @@
 
 # Use Cases
 
-- Refresh all GPT ad-slots after every 30 seconds
-- Refresh all GPT ad-slots after 30 seconds, maximum 2 times
-- Refresh all GPT ad-slots after every 30 seconds but only if GPT ad-slot is in view
+- Refresh all GPT ad-slots after every 20 seconds
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        countdownDuration: 20000
+    }
+});
+
+```
+
+- Refresh all GPT ad-slots after 20 seconds, maximum 2 times
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        countdownDuration: 20000,
+        maximumRefreshCount: 2
+    }
+});
+
+```
+
+- Refresh all GPT ad-slots after every 20 seconds but only if GPT ad-slot is in view
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        countdownDuration: 20000,
+        refreshAdSlotWithMinimumViewabilityPercentag: 100 // or set to 50 for partially visible        
+    }
+});
+```
+
+
+- Refresh all GPT ad-slots but only after the slot is viewed by user, refresh after 20 seconds
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        countdownDuration: 20000,
+        startCountdownWithMinimumViewabilityPercentage: 100 // or set to 50 for partially visible        
+    }
+});
+```
+
+- Refresh all GPT ad-slots but only after the slot is viewed by user, refresh after 20 seconds but when GPT ad-slot is in view
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        countdownDuration: 20000,
+        startCountdownWithMinimumViewabilityPercentage: 100, // or set to 50 for partially visible  
+        refreshAdSlotWithMinimumViewabilityPercentag: 100 // or set to 50 for partially visible              
+    }
+});
+```
+
+- Do not refresh GPT slot rendering in Div `DIV-100`
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        excludeSlotIds: [ 'Div-100']
+    }
+});
+```
+
+
 
 - Apply same config for all GPT ad-slots but want to have different config for some slots
 
@@ -39,7 +105,7 @@
 - Exclusion list based on GPT ad-slot ID and GPT ad-slot sizes
 - Provision for custom exclusion function
 
-- Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds
+
 - Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
 
 # Drwaback
