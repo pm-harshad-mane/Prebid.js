@@ -1,6 +1,13 @@
 pubmaticAutoRefresh
 
 
+# Config
+| Param               | Data type | Default value | Usage |
+|---------------------|-----------|----------------|-----------------------------------------------------------|
+| countdownDuration   | int       | 30000          | time in milliseconds|
+| enabled             | boolean   | false          | must be set to true to enable the module |
+| maximumRefreshCount | int       | 3              | how many times the slot must be refreshed after it is rendered for the first time |
+
 # Use Cases
 
 - Before refreshing GPT ad-slot, respective PBJS AdUnit is found by the module and new bids are fetched by PBJS and then the GPT ads-lot is refreshed, with a failsafe.
@@ -22,3 +29,4 @@ pubmaticAutoRefresh
 - Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
 
 # Drwaback
+- only onle slot is handled at a time
