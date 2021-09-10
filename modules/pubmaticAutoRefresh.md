@@ -3,7 +3,7 @@ pubmaticAutoRefresh
 
 # Config
 | Param               | Data type | Default value | Usage |
-|---------------------|-----------|----------------|-----------------------------------------------------------|
+|---------------------|-----------|----------------|------------------------------------------|
 | enabled             | boolean   | false          | must be set to true to enable the module |
 | maximumRefreshCount | int       | 3              | how many times the slot must be refreshed after it is rendered for the first time |
 | countdownDuration   | int       | 30000          | time in milliseconds|
