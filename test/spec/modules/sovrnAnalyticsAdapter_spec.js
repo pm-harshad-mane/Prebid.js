@@ -3,9 +3,9 @@ import { expect } from 'chai';
 import {config} from 'src/config.js';
 import adaptermanager from 'src/adapterManager.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 var assert = require('assert');
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 /**

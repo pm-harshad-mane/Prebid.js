@@ -12,7 +12,7 @@ import { config } from '../../src/config.js';
 import { VIDEO, NATIVE } from '../../src/mediaTypes.js';
 import { processNativeAdUnitParams } from '../../src/native.js';
 import { isValid } from '../../src/adapters/bidderFactory.js';
-import events from '../../src/events.js';
+import { emit, on } from '../../src/events.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import { S2S_VENDORS } from './config.js';
 import { ajax } from '../../src/ajax.js';
@@ -1136,7 +1136,7 @@ export function PrebidServer() {
         }
       });
 
-      bidderRequests.forEach(bidderRequest => events.emit(CONSTANTS.EVENTS.BIDDER_DONE, bidderRequest));
+      bidderRequests.forEach(bidderRequest => emit(CONSTANTS.EVENTS.BIDDER_DONE, bidderRequest));
     } catch (error) {
       logError(error);
     }
@@ -1150,7 +1150,7 @@ export function PrebidServer() {
   }
 
   // Listen for bid won to call wurl
-  events.on(CONSTANTS.EVENTS.BID_WON, bidWonHandler);
+  on(CONSTANTS.EVENTS.BID_WON, bidWonHandler);
 
   return Object.assign(this, {
     callBids: baseAdapter.callBids,

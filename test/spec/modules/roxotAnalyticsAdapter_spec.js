@@ -1,8 +1,8 @@
 import roxotAnalytic from 'modules/roxotAnalyticsAdapter.js';
 import {expect} from 'chai';
 import {server} from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('Roxot Prebid Analytic', function () {

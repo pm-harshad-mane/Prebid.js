@@ -1,9 +1,9 @@
 import adagioAnalyticsAdapter from 'modules/adagioAnalyticsAdapter.js';
 import { expect } from 'chai';
 import * as utils from 'src/utils.js';
+import * as events from 'src/events.js';
 
 let adapterManager = require('src/adapterManager').default;
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('adagio analytics adapter', () => {

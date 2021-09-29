@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import pubwiseAnalytics from 'modules/pubwiseAnalyticsAdapter.js';
 import {server} from 'test/mocks/xhr.js';
-let events = require('src/events');
+import * as events from 'src/events.js';
 let adapterManager = require('src/adapterManager').default;
 let constants = require('src/constants.json');
 

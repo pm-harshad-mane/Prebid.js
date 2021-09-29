@@ -3,9 +3,9 @@ import includes from 'core-js-pure/features/array/includes.js';
 import { expect } from 'chai';
 import { parseUrl } from 'src/utils.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
 let adapterManager = require('src/adapterManager').default;
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 function setCookie(name, value, expires) {

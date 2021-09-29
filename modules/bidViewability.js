@@ -3,7 +3,7 @@
 // Does not work with other than GPT integration
 
 import { config } from '../src/config.js';
-import * as events from '../src/events.js';
+import { emit, on } from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
 import { logWarn, isFn, triggerPixel } from '../src/utils.js';
 import { getGlobal } from '../src/prebidGlobal.js';
@@ -70,12 +70,12 @@ export let impressionViewableHandler = (globalModuleConfig, slot, event) => {
     // trigger respective bidder's onBidViewable handler
     adapterManager.callBidViewableBidder(respectiveBid.bidder, respectiveBid);
     // emit the BID_VIEWABLE event with bid details, this event can be consumed by bidders and analytics pixels
-    events.emit(EVENTS.BID_VIEWABLE, respectiveBid);
+    emit(EVENTS.BID_VIEWABLE, respectiveBid);
   }
 };
 
 export let init = () => {
-  events.on(EVENTS.AUCTION_INIT, () => {
+  on(EVENTS.AUCTION_INIT, () => {
     // read the config for the module
     const globalModuleConfig = config.getConfig(MODULE_NAME) || {};
     // do nothing if module-config.enabled is not set to true

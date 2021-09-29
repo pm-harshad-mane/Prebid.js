@@ -2,7 +2,7 @@ import konduitAnalyticsAdapter from 'modules/konduitAnalyticsAdapter';
 import { expect } from 'chai';
 import { config } from '../../../src/config.js';
 import { server } from 'test/mocks/xhr.js';
-let events = require('src/events');
+import * as events from 'src/events.js';
 let adapterManager = require('src/adapterManager').default;
 let CONSTANTS = require('src/constants.json');
 

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import events from 'src/events.js';
+import * as events from 'src/events.js';
 import CONSTANTS from 'src/constants.json';
 import { server } from 'test/mocks/xhr.js';
 
@@ -47,7 +47,7 @@ FEATURE: Analytics Adapters API
     const eventType = BID_RESPONSE;
     const args = { wat: 'wot' };
 
-    events.emit(eventType, args);
+    emit(eventType, args);
     adapter.enableAnalytics();
 
     // As now AUCTION_DEBUG is triggered for WARNINGS too, the BID_RESPONSE goes last in the array
@@ -62,7 +62,7 @@ FEATURE: Analytics Adapters API
     });
 
     afterEach(function () {
-      events.getEvents.restore();
+      getEvents.restore();
     });
 
     it('SHOULD call global when a bidWon event occurs', function () {
@@ -70,7 +70,7 @@ FEATURE: Analytics Adapters API
       const args = { more: 'info' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {more: 'info'}, eventType: 'bidWon'});
@@ -81,7 +81,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'adRenderFailed' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'adRenderFailed'}, eventType: 'adRenderFailed'});
@@ -92,7 +92,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'adRenderSucceeded' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'adRenderSucceeded'}, eventType: 'adRenderSucceeded'});
@@ -103,7 +103,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'auctionDebug' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'auctionDebug'}, eventType: 'auctionDebug'});
@@ -114,7 +114,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'addAdUnits' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'addAdUnits'}, eventType: 'addAdUnits'});
@@ -125,7 +125,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'request' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'request'}, eventType: 'requestBids'});
@@ -136,7 +136,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'request' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'request'}, eventType: 'bidRequested'});
@@ -147,7 +147,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'response' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'response'}, eventType: 'bidResponse'});
@@ -158,7 +158,7 @@ FEATURE: Analytics Adapters API
       const args = { call: 'timeout' };
 
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       let result = JSON.parse(server.requests[0].requestBody);
       expect(result).to.deep.equal({args: {call: 'timeout'}, eventType: 'bidTimeout'});
@@ -168,9 +168,9 @@ FEATURE: Analytics Adapters API
       const eventType = BID_TIMEOUT;
       const args = { call: 'timeout' };
 
-      events.emit(eventType, args);
+      emit(eventType, args);
       adapter.enableAnalytics();
-      events.emit(eventType, args);
+      emit(eventType, args);
 
       expect(server.requests.length).to.equal(1);
     });
@@ -193,7 +193,7 @@ FEATURE: Analytics Adapters API
             sampling: 0.75
           }
         });
-        events.emit(eventType, args);
+        emit(eventType, args);
 
         expect(server.requests.length).to.equal(1);
         let result = JSON.parse(server.requests[0].requestBody);
@@ -206,7 +206,7 @@ FEATURE: Analytics Adapters API
             sampling: 0.25
           }
         });
-        events.emit(eventType, args);
+        emit(eventType, args);
 
         expect(server.requests.length).to.equal(0);
       });

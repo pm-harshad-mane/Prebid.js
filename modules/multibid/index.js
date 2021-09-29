@@ -8,7 +8,7 @@ import {setupBeforeHookFnOnce, getHook} from '../../src/hook.js';
 import {
   logWarn, deepAccess, getUniqueIdentifierStr, deepSetValue, groupBy
 } from '../../src/utils.js';
-import events from '../../src/events.js';
+import { on } from '../../src/events.js';
 import CONSTANTS from '../../src/constants.json';
 import {addBidderRequests} from '../../src/auction.js';
 import {getHighestCpmBidsFromBidPool, sortByDealAndPriceBucketOrCpm} from '../../src/targeting.js';
@@ -227,7 +227,7 @@ export const resetMultibidUnits = () => multibidUnits = {};
 * Set up hooks on init
 */
 function init() {
-  events.on(CONSTANTS.EVENTS.AUCTION_INIT, resetMultibidUnits);
+  on(CONSTANTS.EVENTS.AUCTION_INIT, resetMultibidUnits);
   setupBeforeHookFnOnce(addBidderRequests, adjustBidderRequestsHook);
   getHook('addBidResponse').before(addBidResponseHook, 3);
   setupBeforeHookFnOnce(getHighestCpmBidsFromBidPool, targetBidPoolHook);

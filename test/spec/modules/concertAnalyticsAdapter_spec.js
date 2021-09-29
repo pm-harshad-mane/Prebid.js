@@ -1,8 +1,8 @@
 import concertAnalytics from 'modules/concertAnalyticsAdapter.js';
 import { expect } from 'chai';
+import * as events from 'src/events.js';
 const sinon = require('sinon');
 let adapterManager = require('src/adapterManager').default;
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('ConcertAnalyticsAdapter', function() {

@@ -72,11 +72,10 @@ import find from 'core-js-pure/features/array/find.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import { OUTSTREAM } from './video.js';
 import { VIDEO } from './mediaTypes.js';
-
+import { emit, on } from './events.js';
 const { syncUsers } = userSync;
 
 const adapterManager = require('./adapterManager.js').default;
-const events = require('./events.js');
 const CONSTANTS = require('./constants.json');
 
 export const AUCTION_STARTED = 'started';
@@ -84,7 +83,7 @@ export const AUCTION_IN_PROGRESS = 'inProgress';
 export const AUCTION_COMPLETED = 'completed';
 
 // register event for bid adjustment
-events.on(CONSTANTS.EVENTS.BID_ADJUSTMENT, function (bid) {
+on(CONSTANTS.EVENTS.BID_ADJUSTMENT, function (bid) {
   adjustBids(bid);
 });
 
@@ -163,14 +162,14 @@ export function newAuction({adUnits, adUnitCodes, callback, cbTimeout, labels, a
         logMessage(`Auction ${_auctionId} timedOut`);
         timedOutBidders = getTimedOutBids(_bidderRequests, _timelyBidders);
         if (timedOutBidders.length) {
-          events.emit(CONSTANTS.EVENTS.BID_TIMEOUT, timedOutBidders);
+          emit(CONSTANTS.EVENTS.BID_TIMEOUT, timedOutBidders);
         }
       }
 
       _auctionStatus = AUCTION_COMPLETED;
       _auctionEnd = Date.now();
 
-      events.emit(CONSTANTS.EVENTS.AUCTION_END, getProperties());
+      emit(CONSTANTS.EVENTS.AUCTION_END, getProperties());
       bidsBackCallback(_adUnits, function () {
         try {
           if (_callback != null) {
@@ -246,7 +245,7 @@ export function newAuction({adUnits, adUnitCodes, callback, cbTimeout, labels, a
 
         _auctionStatus = AUCTION_IN_PROGRESS;
 
-        events.emit(CONSTANTS.EVENTS.AUCTION_INIT, getProperties());
+        emit(CONSTANTS.EVENTS.AUCTION_INIT, getProperties());
 
         let callbacks = auctionCallbacks(auctionDone, this);
         adapterManager.callBids(_adUnits, bidRequests, function(...args) {
@@ -419,7 +418,7 @@ export function auctionCallbacks(auctionDone, auctionInstance) {
     bidderRequest.bids.forEach(bid => {
       if (!bidResponseMap[bid.bidId]) {
         auctionInstance.addNoBid(bid);
-        events.emit(CONSTANTS.EVENTS.NO_BID, bid);
+        emit(CONSTANTS.EVENTS.NO_BID, bid);
       }
     });
 
@@ -446,7 +445,7 @@ export function addBidToAuction(auctionInstance, bidResponse) {
   let bidderRequest = find(bidderRequests, bidderRequest => bidderRequest.bidderCode === bidResponse.bidderCode);
   setupBidTargeting(bidResponse, bidderRequest);
 
-  events.emit(CONSTANTS.EVENTS.BID_RESPONSE, bidResponse);
+  emit(CONSTANTS.EVENTS.BID_RESPONSE, bidResponse);
   auctionInstance.addBidReceived(bidResponse);
 
   doCallbacksIfTimedout(auctionInstance, bidResponse);
@@ -520,7 +519,7 @@ function getPreparedBidForAuction({adUnitCode, bid, bidderRequest, auctionId}) {
   //
   // CAREFUL: Publishers rely on certain bid properties to be available (like cpm),
   // but others to not be set yet (like priceStrings). See #1372 and #1389.
-  events.emit(CONSTANTS.EVENTS.BID_ADJUSTMENT, bidObject);
+  emit(CONSTANTS.EVENTS.BID_ADJUSTMENT, bidObject);
 
   // a publisher-defined renderer can be used to render bids
   const bidReq = bidderRequest.bids && find(bidderRequest.bids, bid => bid.adUnitCode == adUnitCode && bid.bidId == bidObject.requestId);

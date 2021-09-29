@@ -1,7 +1,7 @@
 import CONSTANTS from 'src/constants.json';
 import liveyield from 'modules/liveyieldAnalyticsAdapter.js';
 import { expect } from 'chai';
-const events = require('src/events');
+import * as events from 'src/events.js';
 
 const {
   EVENTS: { BID_REQUESTED, BID_TIMEOUT, BID_RESPONSE, BID_WON }

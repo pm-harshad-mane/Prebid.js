@@ -3,7 +3,7 @@
    access to a publisher page from creative payloads.
  */
 
-import events from './events.js';
+import { emit } from './events.js';
 import { fireNativeTrackers, getAssetMessage, getAllAssetsMessage } from './native.js';
 import constants from './constants.json';
 import { logWarn, replaceAuctionPrice, deepAccess, isGptPubadsDefined, isApnGetTagDefined } from './utils.js';
@@ -37,7 +37,7 @@ export function receiveMessage(ev) {
     if (adObject && data.message === 'Prebid Request') {
       if (adObject.status === constants.BID_STATUS.RENDERED) {
         logWarn(`Ad id ${adObject.adId} has been rendered before`);
-        events.emit(STALE_RENDER, adObject);
+        emit(STALE_RENDER, adObject);
         if (deepAccess(config.getConfig('auctionOptions'), 'suppressStaleRender')) {
           return;
         }
@@ -48,7 +48,7 @@ export function receiveMessage(ev) {
       // save winning bids
       auctionManager.addWinningBid(adObject);
 
-      events.emit(BID_WON, adObject);
+      emit(BID_WON, adObject);
     }
 
     // handle this script from native template in an ad server
@@ -74,7 +74,7 @@ export function receiveMessage(ev) {
       if (trackerType === 'click') { return; }
 
       auctionManager.addWinningBid(adObject);
-      events.emit(BID_WON, adObject);
+      emit(BID_WON, adObject);
     }
   }
 }

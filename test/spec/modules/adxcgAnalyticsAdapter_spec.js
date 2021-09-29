@@ -2,8 +2,8 @@ import adxcgAnalyticsAdapter from 'modules/adxcgAnalyticsAdapter.js';
 import { expect } from 'chai';
 import adapterManager from 'src/adapterManager.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('adxcg analytics adapter', function () {

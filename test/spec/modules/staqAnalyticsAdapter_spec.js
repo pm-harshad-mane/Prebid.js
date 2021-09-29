@@ -2,8 +2,7 @@ import analyticsAdapter, { ExpiringQueue, getUmtSource, storage } from 'modules/
 import { expect } from 'chai';
 import adapterManager from 'src/adapterManager.js';
 import CONSTANTS from 'src/constants.json';
-
-const events = require('../../../src/events');
+import * as events from 'src/events.js';
 
 const DIRECT = {
   source: '(direct)',

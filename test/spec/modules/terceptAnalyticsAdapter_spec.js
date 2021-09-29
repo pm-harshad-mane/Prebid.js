@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import adapterManager from 'src/adapterManager.js';
 import * as utils from 'src/utils.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('tercept analytics adapter', function () {

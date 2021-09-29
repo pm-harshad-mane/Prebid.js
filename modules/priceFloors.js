@@ -2,7 +2,7 @@ import { getGlobal } from '../src/prebidGlobal.js';
 import { config } from '../src/config.js';
 import * as utils from '../src/utils.js';
 import { ajaxBuilder } from '../src/ajax.js';
-import events from '../src/events.js';
+import * as events from '../src/events.js';
 import CONSTANTS from '../src/constants.json';
 import { getHook } from '../src/hook.js';
 import { createBid } from '../src/bidfactory.js';

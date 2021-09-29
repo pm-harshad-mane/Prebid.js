@@ -20,8 +20,7 @@ import {expect} from 'chai';
 import adapterManager from 'src/adapterManager.js';
 import * as ajax from 'src/ajax.js';
 import CONSTANTS from 'src/constants.json';
-
-const events = require('../../../src/events');
+import * as events from 'src/events.js';
 
 describe('RIVR Analytics adapter', () => {
   const EXPIRING_QUEUE_TIMEOUT = 4000;

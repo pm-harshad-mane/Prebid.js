@@ -4,8 +4,8 @@ import prebidmanagerAnalytics, {
 import {expect} from 'chai';
 import {server} from 'test/mocks/xhr.js';
 import * as utils from 'src/utils.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('Prebid Manager Analytics Adapter', function () {

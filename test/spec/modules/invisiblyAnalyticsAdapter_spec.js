@@ -1,6 +1,6 @@
 import invisiblyAdapter from 'modules/invisiblyAnalyticsAdapter.js';
 import { expect } from 'chai';
-let events = require('src/events');
+import * as events from 'src/events.js';
 let constants = require('src/constants.json');
 
 describe('Invisibly Analytics Adapter test suite', function () {

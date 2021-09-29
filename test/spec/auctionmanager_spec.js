@@ -14,6 +14,7 @@ import * as store from 'src/videoCache.js';
 import * as ajaxLib from 'src/ajax.js';
 import find from 'core-js-pure/features/array/find.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
 var assert = require('assert');
 
@@ -23,7 +24,6 @@ var assert = require('assert');
 var utils = require('../../src/utils');
 var fixtures = require('../fixtures/fixtures');
 var adapterManager = require('src/adapterManager').default;
-var events = require('src/events');
 
 const BIDDER_CODE = 'sampleBidder';
 const BIDDER_CODE1 = 'sampleBidder1';

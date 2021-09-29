@@ -1,8 +1,8 @@
 import adWMGAnalyticsAdapter from 'modules/adWMGAnalyticsAdapter.js';
 import { expect } from 'chai';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 let adapterManager = require('src/adapterManager').default;
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('adWMG Analytics', function () {

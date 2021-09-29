@@ -6,9 +6,9 @@ import {
   setConfig,
   addBidResponseHook,
 } from 'modules/currency.js';
+import * as events from 'src/events.js';
 
 // using es6 "import * as events from 'src/events'" causes the events.getEvents stub not to work...
-let events = require('src/events');
 let ajax = require('src/ajax');
 let utils = require('src/utils');
 

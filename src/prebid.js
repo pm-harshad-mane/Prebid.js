@@ -19,11 +19,11 @@ import { adunitCounter } from './adUnits.js';
 import { executeRenderer, isRendererRequired } from './Renderer.js';
 import { createBid } from './bidfactory.js';
 import { storageCallbacks } from './storageManager.js';
+import { emit, on, off, getEvents } from './events.js';
 
 const $$PREBID_GLOBAL$$ = getGlobal();
 const CONSTANTS = require('./constants.json');
 const adapterManager = require('./adapterManager.js').default;
-const events = require('./events.js');
 const { triggerUserSyncs } = userSync;
 
 /* private variables */
@@ -151,7 +151,7 @@ function validateAdUnitPos(adUnit, mediaType) {
     let warning = `Value of property 'pos' on ad unit ${adUnit.code} should be of type: Number`;
 
     logWarn(warning);
-    events.emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: warning});
+    emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: warning});
     delete adUnit.mediaTypes[mediaType].pos;
   }
 
@@ -365,7 +365,7 @@ $$PREBID_GLOBAL$$.setTargetingForGPTAsync = function (adUnit, customSlotMatching
   });
 
   // emit event
-  events.emit(SET_TARGETING, targetingSet);
+  emit(SET_TARGETING, targetingSet);
 };
 
 /**
@@ -383,7 +383,7 @@ $$PREBID_GLOBAL$$.setTargetingForAst = function (adUnitCodes) {
   targeting.setTargetingForAst(adUnitCodes);
 
   // emit event
-  events.emit(SET_TARGETING, targeting.getAllTargeting());
+  emit(SET_TARGETING, targeting.getAllTargeting());
 };
 
 function emitAdRenderFail({ reason, message, bid, id }) {
@@ -392,7 +392,7 @@ function emitAdRenderFail({ reason, message, bid, id }) {
   if (id) data.adId = id;
 
   logError(message);
-  events.emit(AD_RENDER_FAILED, data);
+  emit(AD_RENDER_FAILED, data);
 }
 
 function emitAdRenderSucceeded({ doc, bid, id }) {
@@ -400,7 +400,7 @@ function emitAdRenderSucceeded({ doc, bid, id }) {
   if (bid) data.bid = bid;
   if (id) data.adId = id;
 
-  events.emit(AD_RENDER_SUCCEEDED, data);
+  emit(AD_RENDER_SUCCEEDED, data);
 }
 
 /**
@@ -423,7 +423,7 @@ $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
         let shouldRender = true;
         if (bid && bid.status === CONSTANTS.BID_STATUS.RENDERED) {
           logWarn(`Ad id ${bid.adId} has been rendered before`);
-          events.emit(STALE_RENDER, bid);
+          emit(STALE_RENDER, bid);
           if (deepAccess(config.getConfig('auctionOptions'), 'suppressStaleRender')) {
             shouldRender = false;
           }
@@ -445,7 +445,7 @@ $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
           auctionManager.addWinningBid(bid);
 
           // emit 'bid won' event here
-          events.emit(BID_WON, bid);
+          emit(BID_WON, bid);
 
           const {height, width, ad, mediaType, adUrl, renderer} = bid;
 
@@ -548,7 +548,7 @@ $$PREBID_GLOBAL$$.removeAdUnit = function (adUnitCode) {
  * @alias module:pbjs.requestBids
  */
 $$PREBID_GLOBAL$$.requestBids = hook('async', function ({ bidsBackHandler, timeout, adUnits, adUnitCodes, labels, auctionId } = {}) {
-  events.emit(REQUEST_BIDS);
+  emit(REQUEST_BIDS);
   const cbTimeout = timeout || config.getConfig('bidderTimeout');
   adUnits = (adUnits && config.convertAdUnitFpd(isArray(adUnits) ? adUnits : [adUnits])) || $$PREBID_GLOBAL$$.adUnits;
 
@@ -663,7 +663,7 @@ $$PREBID_GLOBAL$$.addAdUnits = function (adUnitArr) {
   logInfo('Invoking $$PREBID_GLOBAL$$.addAdUnits', arguments);
   $$PREBID_GLOBAL$$.adUnits.push.apply($$PREBID_GLOBAL$$.adUnits, config.convertAdUnitFpd(isArray(adUnitArr) ? adUnitArr : [adUnitArr]));
   // emit event
-  events.emit(ADD_AD_UNITS);
+  emit(ADD_AD_UNITS);
 };
 
 /**
@@ -694,7 +694,7 @@ $$PREBID_GLOBAL$$.onEvent = function (event, handler, id) {
     return;
   }
 
-  events.on(event, handler, id);
+  on(event, handler, id);
 };
 
 /**
@@ -709,7 +709,7 @@ $$PREBID_GLOBAL$$.offEvent = function (event, handler, id) {
     return;
   }
 
-  events.off(event, handler, id);
+  off(event, handler, id);
 };
 
 /**
@@ -719,7 +719,7 @@ $$PREBID_GLOBAL$$.offEvent = function (event, handler, id) {
  */
 $$PREBID_GLOBAL$$.getEvents = function () {
   logInfo('Invoking $$PREBID_GLOBAL$$.getEvents');
-  return events.getEvents();
+  return getEvents();
 };
 
 /*

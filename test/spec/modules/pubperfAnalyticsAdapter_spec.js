@@ -1,7 +1,7 @@
 import pubperfAnalytics from 'modules/pubperfAnalyticsAdapter.js';
 import { expect } from 'chai';
 import { server } from 'test/mocks/xhr.js';
-let events = require('src/events');
+import * as events from 'src/events.js';
 let utils = require('src/utils.js');
 let constants = require('src/constants.json');
 

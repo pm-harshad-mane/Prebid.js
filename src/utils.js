@@ -3,6 +3,7 @@ import { config } from './config.js';
 import clone from 'just-clone';
 import find from 'core-js-pure/features/array/find.js';
 import includes from 'core-js-pure/features/array/includes.js';
+import { emit } from './events.js';
 
 const CONSTANTS = require('./constants.json');
 
@@ -21,7 +22,6 @@ let consoleLogExists = Boolean(consoleExists && window.console.log);
 let consoleInfoExists = Boolean(consoleExists && window.console.info);
 let consoleWarnExists = Boolean(consoleExists && window.console.warn);
 let consoleErrorExists = Boolean(consoleExists && window.console.error);
-var events = require('./events.js');
 
 // this allows stubbing of utility functions that are used internally by other utility functions
 export const internal = {
@@ -264,14 +264,14 @@ export function logWarn() {
   if (debugTurnedOn() && consoleWarnExists) {
     console.warn.apply(console, decorateLog(arguments, 'WARNING:'));
   }
-  events.emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
+  emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'WARNING', arguments: arguments});
 }
 
 export function logError() {
   if (debugTurnedOn() && consoleErrorExists) {
     console.error.apply(console, decorateLog(arguments, 'ERROR:'));
   }
-  events.emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
+  emit(CONSTANTS.EVENTS.AUCTION_DEBUG, {type: 'ERROR', arguments: arguments});
 }
 
 function decorateLog(args, prefix) {

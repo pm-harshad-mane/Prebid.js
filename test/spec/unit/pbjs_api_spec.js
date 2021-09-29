@@ -16,13 +16,14 @@ import * as auctionModule from 'src/auction.js';
 import { registerBidder } from 'src/adapters/bidderFactory.js';
 import { _sendAdToCreative } from 'src/secureCreatives.js';
 import find from 'core-js-pure/features/array/find.js';
+import * as events from 'src/events.js';
 
 var assert = require('chai').assert;
 var expect = require('chai').expect;
 
 var utils = require('src/utils');
 var adapterManager = require('src/adapterManager').default;
-var events = require('src/events');
+
 var CONSTANTS = require('src/constants.json');
 
 // These bid adapters are required to be loaded for the following tests to work

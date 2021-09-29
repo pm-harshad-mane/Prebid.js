@@ -15,9 +15,10 @@ import includes from 'core-js-pure/features/array/includes.js';
 import find from 'core-js-pure/features/array/find.js';
 import { adunitCounter } from './adUnits.js';
 import { getRefererInfo } from './refererDetection.js';
+import {emit} from './events.js';
 
 var CONSTANTS = require('./constants.json');
-var events = require('./events.js');
+
 let s2sTestingModule; // store s2sTesting module if it's loaded
 
 let adapterManager = {};
@@ -208,7 +209,7 @@ adapterManager.makeBidRequests = hook('sync', function (adUnits, auctionStart, a
    * emit and pass adunits for external modification
    * @see {@link https://github.com/prebid/Prebid.js/issues/4149|Issue}
    */
-  events.emit(CONSTANTS.EVENTS.BEFORE_REQUEST_BIDS, adUnits);
+  emit(CONSTANTS.EVENTS.BEFORE_REQUEST_BIDS, adUnits);
 
   let bidderCodes = getBidderCodes(adUnits);
   if (config.getConfig('bidderSequence') === RANDOM) {
@@ -391,7 +392,7 @@ adapterManager.callBids = (adUnits, bidRequests, addBidResponse, doneCb, request
 
           // fire BID_REQUESTED event for each s2s bidRequest
           uniqueServerRequests.forEach(bidRequest => {
-            events.emit(CONSTANTS.EVENTS.BID_REQUESTED, bidRequest);
+            emit(CONSTANTS.EVENTS.BID_REQUESTED, bidRequest);
           });
 
           // make bid requests
@@ -422,7 +423,7 @@ adapterManager.callBids = (adUnits, bidRequests, addBidResponse, doneCb, request
     const adapter = _bidderRegistry[bidRequest.bidderCode];
     config.runWithBidder(bidRequest.bidderCode, () => {
       logMessage(`CALLING BIDDER`);
-      events.emit(CONSTANTS.EVENTS.BID_REQUESTED, bidRequest);
+      emit(CONSTANTS.EVENTS.BID_REQUESTED, bidRequest);
     });
     let ajax = ajaxBuilder(requestBidsTimeout, requestCallbacks ? {
       request: requestCallbacks.request.bind(null, bidRequest.bidderCode),

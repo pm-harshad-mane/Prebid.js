@@ -14,7 +14,7 @@ import { setSizeConfig } from 'src/sizeMapping.js';
 import find from 'core-js-pure/features/array/find.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import s2sTesting from 'modules/s2sTesting.js';
-var events = require('../../../../src/events');
+import * as events from 'src/events.js';
 
 const CONFIG = {
   enabled: true,

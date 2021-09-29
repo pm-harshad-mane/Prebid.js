@@ -6,7 +6,7 @@ import { userSync } from '../userSync.js';
 import { nativeBidIsValid } from '../native.js';
 import { isValidVideoBid } from '../video.js';
 import CONSTANTS from '../constants.json';
-import events from '../events.js';
+import {emit} from '../events.js';
 import includes from 'core-js-pure/features/array/includes.js';
 import { ajax } from '../ajax.js';
 import { logWarn, logError, parseQueryStringParameters, delayExecution, parseSizesInput, getBidderRequest, flatten, uniques, timestamp, deepAccess, isArray, isPlainObject } from '../utils.js';
@@ -198,7 +198,7 @@ export function newBidder(spec) {
       function afterAllResponses() {
         done();
         config.runWithBidder(spec.code, () => {
-          events.emit(CONSTANTS.EVENTS.BIDDER_DONE, bidderRequest);
+          emit(CONSTANTS.EVENTS.BIDDER_DONE, bidderRequest);
           registerSyncs(responses, bidderRequest.gdprConsent, bidderRequest.uspConsent);
         });
       }
@@ -230,7 +230,7 @@ export function newBidder(spec) {
       // Server requests have returned and been processed. Since `ajax` accepts a single callback,
       // we need to rig up a function which only executes after all the requests have been responded.
       const onResponse = delayExecution(configEnabledCallback(afterAllResponses), requests.length)
-      requests.forEach(_ => events.emit(CONSTANTS.EVENTS.BEFORE_BIDDER_HTTP, bidderRequest));
+      requests.forEach(_ => emit(CONSTANTS.EVENTS.BEFORE_BIDDER_HTTP, bidderRequest));
       requests.forEach(processRequest);
 
       function formatGetParameters(data) {

@@ -3,7 +3,7 @@ import {
   ANALYTICS_VERSION, BIDDER_STATUS
 } from 'modules/appierAnalyticsAdapter.js';
 import {expect} from 'chai';
-const events = require('src/events');
+import * as events from 'src/events.js';
 const constants = require('src/constants.json');
 
 const affiliateId = 'WhctHaViHtI';

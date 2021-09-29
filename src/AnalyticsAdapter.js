@@ -1,8 +1,7 @@
 import CONSTANTS from './constants.json';
 import { ajax } from './ajax.js';
 import { logMessage, _each } from './utils.js';
-
-const events = require('./events.js');
+import { getEvents, on, off } from './events.js';
 
 const {
   EVENTS: {
@@ -88,7 +87,7 @@ export default function AnalyticsAdapter({ url, analyticsType, global, handler }
 
     if (_sampled) {
       // first send all events fired before enableAnalytics called
-      events.getEvents().forEach(event => {
+      getEvents().forEach(event => {
         if (!event) {
           return;
         }
@@ -124,7 +123,7 @@ export default function AnalyticsAdapter({ url, analyticsType, global, handler }
       };
 
       _each(_handlers, (handler, event) => {
-        events.on(event, handler);
+        on(event, handler);
       });
     } else {
       logMessage(`Analytics adapter for "${global}" disabled by sampling`);
@@ -139,7 +138,7 @@ export default function AnalyticsAdapter({ url, analyticsType, global, handler }
 
   function _disable() {
     _each(_handlers, (handler, event) => {
-      events.off(event, handler);
+      off(event, handler);
     });
     this.enableAnalytics = this._oldEnable ? this._oldEnable : _enable;
   }

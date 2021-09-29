@@ -8,8 +8,8 @@ import * as utils from 'src/utils.js';
 import {
   server
 } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let constants = require('src/constants.json');
 
 describe('pubxai analytics adapter', function() {

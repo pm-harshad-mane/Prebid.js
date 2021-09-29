@@ -2,8 +2,8 @@ import livewrappedAnalyticsAdapter, { BID_WON_TIMEOUT } from 'modules/livewrappe
 import CONSTANTS from 'src/constants.json';
 import { config } from 'src/config.js';
 import { server } from 'test/mocks/xhr.js';
+import * as events from 'src/events.js';
 
-let events = require('src/events');
 let utils = require('src/utils');
 let adapterManager = require('src/adapterManager').default;
 

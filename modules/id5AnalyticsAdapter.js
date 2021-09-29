@@ -3,7 +3,7 @@ import CONSTANTS from '../src/constants.json';
 import adapterManager from '../src/adapterManager.js';
 import { ajax } from '../src/ajax.js';
 import { logInfo, logError } from '../src/utils.js';
-import events from '../src/events.js';
+import { getEvents, on, off } from '../src/events.js';
 
 const {
   EVENTS: {
@@ -148,7 +148,7 @@ const ENABLE_FUNCTION = (config) => {
 
       // Replay all events until now
       if (!config.disablePastEventsProcessing) {
-        events.getEvents().forEach((event) => {
+        getEvents().forEach((event) => {
           if (event && _this.eventsToTrack.indexOf(event.eventType) >= 0) {
             _this.track(event);
           }
@@ -177,7 +177,7 @@ const ENABLE_FUNCTION = (config) => {
       _this.eventsToTrack.forEach((eventType) => {
         const handler = _this.handlers[eventType] = (args) =>
           _this.track({ eventType, args });
-        events.on(eventType, handler);
+        on(eventType, handler);
       });
     }
   });
@@ -192,7 +192,7 @@ id5Analytics.disableAnalytics = () => {
   // Un-register to the events of interest
   _this.eventsToTrack.forEach((eventType) => {
     if (_this.handlers && _this.handlers[eventType]) {
-      events.off(eventType, _this.handlers[eventType]);
+      off(eventType, _this.handlers[eventType]);
     }
   });
 

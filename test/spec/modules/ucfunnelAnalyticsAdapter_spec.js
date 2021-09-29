@@ -4,8 +4,8 @@ import {
 } from 'modules/ucfunnelAnalyticsAdapter.js';
 
 import {expect} from 'chai';
+import * as events from 'src/events.js';
 
-const events = require('src/events');
 const constants = require('src/constants.json');
 
 const pbuid = 'pbuid-AA778D8A796AEA7A0843E2BBEB677766';

@@ -6,7 +6,7 @@ import {parseBrowser} from '../../../modules/atsAnalyticsAdapter.js';
 import {getStorageManager} from '../../../src/storageManager.js';
 import {analyticsUrl} from '../../../modules/atsAnalyticsAdapter.js';
 
-let events = require('src/events');
+import * as events from 'src/events.js';
 let constants = require('src/constants.json');
 
 export const storage = getStorageManager();

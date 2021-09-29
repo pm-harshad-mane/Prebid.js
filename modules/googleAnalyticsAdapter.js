@@ -2,7 +2,7 @@
  * ga.js - analytics adapter for google analytics
  */
 
-var events = require('../src/events.js');
+import { getEvents, on } from '../src/events.js';
 var utils = require('../src/utils.js');
 var CONSTANTS = require('../src/constants.json');
 var adapterManager = require('../src/adapterManager.js').default;
@@ -52,7 +52,7 @@ adapter.enableAnalytics = function ({ provider, options }) {
   if (_sampled) {
     // first send all events fired before enableAnalytics called
 
-    var existingEvents = events.getEvents();
+    var existingEvents = getEvents();
 
     utils._each(existingEvents, function (eventObj) {
       if (typeof eventObj !== 'object') {
@@ -79,22 +79,22 @@ adapter.enableAnalytics = function ({ provider, options }) {
     // Next register event listeners to send data immediately
 
     // bidRequests
-    events.on(BID_REQUESTED, function (bidRequestObj) {
+    on(BID_REQUESTED, function (bidRequestObj) {
       sendBidRequestToGa(bidRequestObj);
     });
 
     // bidResponses
-    events.on(BID_RESPONSE, function (bid) {
+    on(BID_RESPONSE, function (bid) {
       sendBidResponseToGa(bid);
     });
 
     // bidTimeouts
-    events.on(BID_TIMEOUT, function (bidderArray) {
+    on(BID_TIMEOUT, function (bidderArray) {
       sendBidTimeouts(bidderArray);
     });
 
     // wins
-    events.on(BID_WON, function (bid) {
+    on(BID_WON, function (bid) {
       sendBidWonToGa(bid);
     });
   } else {
