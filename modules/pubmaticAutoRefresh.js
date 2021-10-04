@@ -19,16 +19,6 @@ let beforeRequestBidsHandlerAdded = false;
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
 
-// few new flags
-  // startCountdownWithMinimumViewabilityPercentage:
-    // used exclusively to start the timer
-    // set to zero to start countdown when ad-slot is rendered
-    // if non zero then start the coundown only when realtime viewability number is more than input
-  // refreshAdSlotWithMinimumViewabilityPercentage:
-    // used exclusively to check if we should refresh now or not
-    // set 0 to refresh ad slot even when it is not visible
-    // if non zero then ad slot will refresh has more realtime viewability number than input
-
 // few new fields in DS
   // hasCounterStarted true / false 
     // do not restart counter if already started;
@@ -51,10 +41,13 @@ let DEFAULT_CONFIG = {
   maximumRefreshCount: 999,
 
   // delay in ms after which the gptSlot to refresh
-  countdownDuration: 30000,
+  countdownDuration: 10000,
+
+  // countdown to refresh will start when rendered creative has visbibility more(or equal) than this
+  startCountdownWithMinimumViewabilityPercentage: 50,
 
   // set it to 0 to refresh all gptSlots w/o visibility percentage check
-  minimumViewPercentage: 70,
+  refreshAdSlotWithMinimumViewabilityPercentage: 50,
 
   // this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it
   kvKeyForRefresh: 'autorefresh',
@@ -67,6 +60,9 @@ let DEFAULT_CONFIG = {
 
   // a function; the default callback function
   callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
+
+    //todo: pick only required fields from the pbjsAdUnit
+
     logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
 
     // set the key-value pairs for auto-refresh functionality
@@ -184,15 +180,13 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf) {
     return
   }
 
-  // consider refreshAdSlotWithMinimumViewabilityPercentage than inViewPercentage ; check <= for zero
-  if (dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage) {
+  if (dsEntry['inViewPercentage'] < slotConf.refreshAdSlotWithMinimumViewabilityPercentage) {
     logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
     return
   }
 
-  // use counterStartedAt than lastRenderedAt ; change log statement
-  if (timestamp() - dsEntry['lastRenderedAt'] < (slotConf.countdownDuration)) {
-    logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot was rendered recently');
+  if (timestamp() - dsEntry['counterStartedAt'] < (slotConf.countdownDuration)) {
+    logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the countdownDuration is not reached.');
     return
   }
 
@@ -244,8 +238,8 @@ function gptSlotRenderEndedHandler(event) {
   DataStore[gptSlotName]['renderedCount']++;
   DataStore[gptSlotName]['inViewPercentage'] = 0;
   DataStore[gptSlotName]['refreshRequested'] = false;
-  // set hasCounterStarted to false
-  // set counterStartedAt to -1
+  DataStore[gptSlotName]['hasCounterStarted'] = false;
+  DataStore[gptSlotName]['counterStartedAt'] = -1;
 
   const slotConf = getSlotLevelConfig(gptSlotName);
 
@@ -253,18 +247,14 @@ function gptSlotRenderEndedHandler(event) {
     return;
   }
 
-  /*
-    if startCountdownWithMinimumViewabilityPercentage === 0 
-      then set hasCounterStarted = true
-      counterStartedAt = timestamp
-      use setTimeout( refreshSlotIfNeeded )
-    else
-      do nothing
-  */
-
-  setTimeout(function() {
-    refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
-  }, slotConf.countdownDuration);
+  if(slotConf.startCountdownWithMinimumViewabilityPercentage === 0){
+    DataStore[gptSlotName]['hasCounterStarted'] = true;
+    DataStore[gptSlotName]['counterStartedAt'] = timestamp();
+    logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName);
+    setTimeout(function() {
+      refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
+    }, slotConf.countdownDuration);
+  }
 }
 
 function gptSlotVisibilityChangedHandler(event) {
@@ -290,17 +280,38 @@ function gptSlotVisibilityChangedHandler(event) {
     return;
   }
 
-  /*
-    if hasCounterStarted = false
-      if startCountdownWithMinimumViewabilityPercentage >= current       
-        set hasCounterStarted = true
-        counterStartedAt = timestamp
-        use setTimeout( refreshSlotIfNeeded )
-    else if hasCounterStarted = true
-      refreshSlotIfNeeded
-  */
+  if(dsEntry['hasCounterStarted'] === false){
+    if(slotConf.startCountdownWithMinimumViewabilityPercentage <= dsEntry['inViewPercentage']){
+      DataStore[gptSlotName]['hasCounterStarted'] = true;
+      DataStore[gptSlotName]['counterStartedAt'] = timestamp();
+      logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName);
+      setTimeout(function() {
+        refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
+      }, slotConf.countdownDuration);
+    }
+  } else {
+    refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
+  }  
+}
 
-  refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
+function applyModuleConfig(){
+  // CONFIG = DEFAULT_CONFIG + Provided module config (higher priority)
+  mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
+}
+
+function setDefaultSlotConfig(){
+  // Generate default slot config that will be applied if customConfig for a GPT slot is not found
+  DEFAULT_SLOT_CONFIG = pick(CONFIG, [
+    'countdownDuration',
+    'startCountdownWithMinimumViewabilityPercentage',
+    'refreshAdSlotWithMinimumViewabilityPercentage',
+    'maximumRefreshCount',
+    'kvKeyForRefresh',
+    'kvValueForRefresh',
+    'kvKeyForRefreshCount',
+    'callbackFunction',
+    'gptSlotToPbjsAdUnitMapFunction'
+  ]);
 }
 
 function init() {
@@ -308,25 +319,12 @@ function init() {
     // BEFORE_REQUEST_BIDS event listener already added, no need to add again
     return;
   }
-
   beforeRequestBidsHandlerAdded = true;
 
-  // CONFIG = DEFAULT_CONFIG + Provided module config (higher priority)
-  mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
+  applyModuleConfig();
 
   if (CONFIG.enabled === true) {
-    // Generate default slot config that will be applied if customConfig for a GPT slot is not found
-    DEFAULT_SLOT_CONFIG = pick(CONFIG, [
-      'countdownDuration',
-      'minimumViewPercentage',
-      'maximumRefreshCount',
-      'kvKeyForRefresh',
-      'kvValueForRefresh',
-      'kvKeyForRefreshCount',
-      'callbackFunction',
-      'gptSlotToPbjsAdUnitMapFunction'
-    ]);
-
+    setDefaultSlotConfig();
     logMessage(MODULE_NAME, ' applicable Config is :', CONFIG);
     logMessage(MODULE_NAME, ' applicable DEFAULT_SLOT_CONFIG is :', DEFAULT_SLOT_CONFIG);
 
