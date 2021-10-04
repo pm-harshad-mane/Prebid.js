@@ -24,12 +24,12 @@ let beforeRequestBidsHandlerAdded = false;
     // used exclusively to start the timer
     // set to zero to start countdown when ad-slot is rendered
     // if non zero then start the coundown only when realtime viewability number is more than input
-  // refreshAdSlotWithMinimumViewabilityPercentag:
+  // refreshAdSlotWithMinimumViewabilityPercentage:
     // used exclusively to check if we should refresh now or not
     // set 0 to refresh ad slot even when it is not visible
     // if non zero then ad slot will refresh has more realtime viewability number than input
 
-// few new fields in DS      
+// few new fields in DS
   // hasCounterStarted true / false 
     // do not restart counter if already started;
     // reset the flag after display creative
@@ -37,11 +37,11 @@ let beforeRequestBidsHandlerAdded = false;
 
 // case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds irrespective of current viewability  
   // startCountdownWithMinimumViewabilityPercentage: 50
-  // refreshAdSlotWithMinimumViewabilityPercentag: 0
+  // refreshAdSlotWithMinimumViewabilityPercentage: 0
 
 // case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
   // startCountdownWithMinimumViewabilityPercentage: 50
-  // refreshAdSlotWithMinimumViewabilityPercentag: 50
+  // refreshAdSlotWithMinimumViewabilityPercentage: 50
 
 let DEFAULT_CONFIG = {
 
@@ -184,7 +184,7 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf) {
     return
   }
 
-  // consider refreshAdSlotWithMinimumViewabilityPercentag than inViewPercentage ; check <= for zero
+  // consider refreshAdSlotWithMinimumViewabilityPercentage than inViewPercentage ; check <= for zero
   if (dsEntry['inViewPercentage'] < slotConf.minimumViewPercentage) {
     logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the inViewPercentage is less than default minimum view percentage');
     return

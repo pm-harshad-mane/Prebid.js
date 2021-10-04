@@ -11,7 +11,7 @@
 | maximumRefreshCount | int       | 999 | how many times the slot must be refreshed after it is rendered for the first time |
 | countdownDuration   | int       | 30000 | time in milliseconds|
 | startCountdownWithMinimumViewabilityPercentage | int (0-100) | 50 | the countDown will start when ad-slot will have viewability percenatge more than this. When set to 0 the count-down will start after rendering the creative, even when ad slot is not viewable. |
-| refreshAdSlotWithMinimumViewabilityPercentag | int (0-100) | 50 | the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
+| refreshAdSlotWithMinimumViewabilityPercentage | int (0-100) | 50 | the ad slot will be refreshed only if it has viewability percenathge more than this value. When set to 0 the ad-slot will be refreshed even if it is not viewable|
 | kvKeyForRefresh | string | 'autorefresh' | this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it |
 | kvValueForRefresh | string | '1' | this value will be added for the key kvKeyForRefresh on the gptSlot |
 | kvKeyForRefreshCount | string | 'autorefreshcount' | this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it |
@@ -21,7 +21,7 @@
 | excludeCallbackFunction | function | `(gptSlotName, gptSlot) => { return true if gptSlotName is found in config.excludeSlotIds else return true if gptSlot size is found in config.excludeSizes else return false }` | if this function returns true then we will ignore the gptSlot and not try to refresh it |
 | excludeSlotIds | array of strings | undefined | in excludeCallbackFunction we will look into this array for gptSlotId if found then the gptSlot will be ignored |
 | excludeSizes | array of strings | undefined | in excludeCallbackFunction we will look into this array for gptSlot size WxH (300x250) if found then the gptSlot will be ignored |
-| customConfig | Object | undefined | if you want to have seperate value for any of the following supported configs for any gptAdSlot then you can enter it here. Supported custom configs ` maximumRefreshCount, countdownDuration, startCountdownWithMinimumViewabilityPercentage, refreshAdSlotWithMinimumViewabilityPercentag, kvKeyForRefresh, kvValueForRefresh, kvKeyForRefreshCount, callbackFunction, gptSlotToPbjsAdUnitMapFunction, excludeCallbackFunction ` Example: `{ 'Div-1' : { maximumRefreshCount: 5 }, 'Div-Top-1': { countdownDuration: 50000 } }` |
+| customConfig | Object | undefined | if you want to have seperate value for any of the following supported configs for any gptAdSlot then you can enter it here. Supported custom configs ` maximumRefreshCount, countdownDuration, startCountdownWithMinimumViewabilityPercentage, refreshAdSlotWithMinimumViewabilityPercentage, kvKeyForRefresh, kvValueForRefresh, kvKeyForRefreshCount, callbackFunction, gptSlotToPbjsAdUnitMapFunction, excludeCallbackFunction ` Example: `{ 'Div-1' : { maximumRefreshCount: 5 }, 'Div-Top-1': { countdownDuration: 50000 } }` |
 
 
 # Use Cases
@@ -55,7 +55,7 @@ pbjs.setConfig({
     'pubmaticAutoRefresh': {
         enabled: true,
         countdownDuration: 20000,
-        refreshAdSlotWithMinimumViewabilityPercentag: 100 // or set to 50 for partially visible        
+        refreshAdSlotWithMinimumViewabilityPercentage: 100 // or set to 50 for partially visible        
     }
 });
 ```
@@ -79,7 +79,7 @@ pbjs.setConfig({
         enabled: true,
         countdownDuration: 20000,
         startCountdownWithMinimumViewabilityPercentage: 100, // or set to 50 for partially visible  
-        refreshAdSlotWithMinimumViewabilityPercentag: 100 // or set to 50 for partially visible              
+        refreshAdSlotWithMinimumViewabilityPercentage: 100 // or set to 50 for partially visible              
     }
 });
 ```
