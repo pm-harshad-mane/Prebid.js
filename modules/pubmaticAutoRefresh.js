@@ -28,7 +28,6 @@ let beforeRequestBidsHandlerAdded = false;
     // used exclusively to check if we should refresh now or not
     // set 0 to refresh ad slot even when it is not visible
     // if non zero then ad slot will refresh has more realtime viewability number than input
-  // rename refreshDelay to countdownDuration
 
 // few new fields in DS      
   // hasCounterStarted true / false 
@@ -52,7 +51,7 @@ let DEFAULT_CONFIG = {
   maximumRefreshCount: 999,
 
   // delay in ms after which the gptSlot to refresh
-  refreshDelay: 30000,
+  countdownDuration: 30000,
 
   // set it to 0 to refresh all gptSlots w/o visibility percentage check
   minimumViewPercentage: 70,
@@ -192,7 +191,7 @@ function refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf) {
   }
 
   // use counterStartedAt than lastRenderedAt ; change log statement
-  if (timestamp() - dsEntry['lastRenderedAt'] < (slotConf.refreshDelay)) {
+  if (timestamp() - dsEntry['lastRenderedAt'] < (slotConf.countdownDuration)) {
     logMessage(MODULE_NAME, gptSlotName, ': not refreshing since the gptSlot was rendered recently');
     return
   }
@@ -265,7 +264,7 @@ function gptSlotRenderEndedHandler(event) {
 
   setTimeout(function() {
     refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
-  }, slotConf.refreshDelay);
+  }, slotConf.countdownDuration);
 }
 
 function gptSlotVisibilityChangedHandler(event) {
@@ -318,7 +317,7 @@ function init() {
   if (CONFIG.enabled === true) {
     // Generate default slot config that will be applied if customConfig for a GPT slot is not found
     DEFAULT_SLOT_CONFIG = pick(CONFIG, [
-      'refreshDelay',
+      'countdownDuration',
       'minimumViewPercentage',
       'maximumRefreshCount',
       'kvKeyForRefresh',
