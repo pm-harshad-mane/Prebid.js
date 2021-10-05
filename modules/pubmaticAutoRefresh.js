@@ -10,28 +10,13 @@ import find from 'core-js-pure/features/array/find.js';
 
 const MODULE_NAME = 'pubmaticAutoRefresh';
 
-let pbjsAuctionTimeoutFromLastAuction;
 let beforeRequestBidsHandlerAdded = false;
+let pbjsAuctionTimeoutFromLastAuction;
 
 // Todo
-
 // move strings (key names) to local consts
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
-
-// few new fields in DS
-  // hasCounterStarted true / false 
-    // do not restart counter if already started;
-    // reset the flag after display creative
-  // add counterStartedAt timestamp() for comparison than using lastRenderedAt
-
-// case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds irrespective of current viewability  
-  // startCountdownWithMinimumViewabilityPercentage: 50
-  // refreshAdSlotWithMinimumViewabilityPercentage: 0
-
-// case: Refresh all GPT ad-slots after it is viewed by user, refresh after 30 seconds but when GPT ad-slot is in view
-  // startCountdownWithMinimumViewabilityPercentage: 50
-  // refreshAdSlotWithMinimumViewabilityPercentage: 50
 
 let DEFAULT_CONFIG = {
 
@@ -223,8 +208,6 @@ function isGptSlotMaxRefreshCountReached(gptSlotName, currentRenderedCount, conf
 }
 
 function gptSlotRenderEndedHandler(event) {
-  // todo: do we need a special handeling for an empty creative?
-
   let gptSlot = event.slot;
   const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
