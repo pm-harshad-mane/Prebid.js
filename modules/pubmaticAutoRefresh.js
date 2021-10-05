@@ -228,6 +228,8 @@ function gptSlotRenderEndedHandler(event) {
   let gptSlot = event.slot;
   const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
+  logMessage(MODULE_NAME, 'gptSlotRenderEndedHandler: gptSlotName', gptSlotName);
+
   if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
     logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, 'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
     return;
@@ -250,7 +252,7 @@ function gptSlotRenderEndedHandler(event) {
   if(slotConf.startCountdownWithMinimumViewabilityPercentage === 0){
     DataStore[gptSlotName]['hasCounterStarted'] = true;
     DataStore[gptSlotName]['counterStartedAt'] = timestamp();
-    logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName);
+    logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName, 'after rendering the creative.');
     setTimeout(function() {
       refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
     }, slotConf.countdownDuration);
@@ -266,8 +268,11 @@ function gptSlotVisibilityChangedHandler(event) {
     return;
   }
 
+  logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName, 'event.inViewPercentage', event.inViewPercentage);
+
   let dsEntry = getDataStoreEntry(gptSlotName);
   if (dsEntry === null) {
+    logMessage(MODULE_NAME, 'DS entry not found, nothing to do');
     return
   }
 
@@ -280,14 +285,22 @@ function gptSlotVisibilityChangedHandler(event) {
     return;
   }
 
-  if(dsEntry['hasCounterStarted'] === false){
+  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'hasCounterStarted:', dsEntry['hasCounterStarted']);
+  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'startCountdownWithMinimumViewabilityPercentage:', slotConf.startCountdownWithMinimumViewabilityPercentage);
+  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'inViewPercentage:', dsEntry['inViewPercentage']);
+
+  if(dsEntry['hasCounterStarted'] === false){    
     if(slotConf.startCountdownWithMinimumViewabilityPercentage <= dsEntry['inViewPercentage']){
-      DataStore[gptSlotName]['hasCounterStarted'] = true;
-      DataStore[gptSlotName]['counterStartedAt'] = timestamp();
-      logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName);
+      dsEntry['hasCounterStarted'] = true;
+      dsEntry['counterStartedAt'] = timestamp();
+      logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName, 'after viewability confition is met. startCountdownWithMinimumViewabilityPercentage', slotConf.startCountdownWithMinimumViewabilityPercentage, 'inViewPercentage', dsEntry['inViewPercentage']);
       setTimeout(function() {
-        refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
+        refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
       }, slotConf.countdownDuration);
+    } else {
+      logMessage(MODULE_NAME, 'viewability condition not met.');
+      logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'startCountdownWithMinimumViewabilityPercentage:', slotConf.startCountdownWithMinimumViewabilityPercentage);
+      logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'inViewPercentage:', dsEntry['inViewPercentage']);
     }
   } else {
     refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
