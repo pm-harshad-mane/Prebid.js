@@ -41,7 +41,7 @@ let DEFAULT_CONFIG = {
   maximumRefreshCount: 999,
 
   // delay in ms after which the gptSlot to refresh
-  countdownDuration: 10000,
+  countdownDuration: 30000,
 
   // countdown to refresh will start when rendered creative has visbibility more(or equal) than this
   startCountdownWithMinimumViewabilityPercentage: 50,
