@@ -19,34 +19,24 @@ let pbjsAuctionTimeoutFromLastAuction;
 // logMessage vs logInfo vs logWarn
 
 let DEFAULT_CONFIG = {
-
   enabled: false,
-
   // how many times we should refresh the ad-gptSlot after it is rendered
   maximumRefreshCount: 999,
-
   // delay in ms after which the gptSlot to refresh
   countdownDuration: 30000,
-
   // countdown to refresh will start when rendered creative has visbibility more(or equal) than this
   startCountdownWithMinimumViewabilityPercentage: 50,
-
   // set it to 0 to refresh all gptSlots w/o visibility percentage check
   refreshAdSlotWithMinimumViewabilityPercentage: 50,
-
   // this key will be added on gptSlot with kvValueForRefresh value; set it to null to not set it
   kvKeyForRefresh: 'pm-auto-refresh',
-
   // this value will be added for the key kvKeyForRefresh on the gptSlot
   kvValueForRefresh: '1',
-
   // this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it
   kvKeyForRefreshCount: 'pm-auto-refresh-count',
-
   // a function; the default callback function
   callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
-
-    //todo: pick only required fields from the pbjsAdUnit
+    // todo: pick only required fields from the pbjsAdUnit
 
     logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
 
@@ -77,19 +67,16 @@ let DEFAULT_CONFIG = {
     // to make sure we call sendAdserverRequest even when PrebidJS fails to execute bidsBackHandler
     setTimeout(sendAdserverRequest, pbjsAuctionTimeoutFromLastAuction + 100)
   },
-
   // a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
   slotIdFunctionForCustomConfig: function(gptSlot) {
     return gptSlot.getSlotElementId();
   },
-
   // a function; this function will help find the GPT gptSlots matching PBJS AdUnit
   gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU) {
     return (gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)
   },
-
   // a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
-  excludeCallbackFunction: function(gptSlotName, gptSlot) { // todo: chnage name?
+  excludeCallbackFunction: function(gptSlotName, gptSlot) {
     // first check if gptSlotName is present in CONFIG.excludeSlotIds array
     if (isArray(CONFIG.excludeSlotIds) && CONFIG.excludeSlotIds.indexOf(gptSlotName) !== -1) {
       logMessage(MODULE_NAME, 'Excluding ', gptSlotName, 'as per CONFIG.excludeSlotIds,', CONFIG.excludeSlotIds);
@@ -100,29 +87,26 @@ let DEFAULT_CONFIG = {
       const gptSlotSizes = gptSlot.getSizes(window.innerWidth, window.innerHeight).map(e => e.width + 'x' + e.height);
       const found = gptSlotSizes.some(size => CONFIG.excludeSizes.indexOf(size) !== -1);
       if (found === true) {
-        logMessage(MODULE_NAME, 'Excluding ', gptSlotName, 'with sizes,', gptSlotSizes, 'as per CONFIG.excludeSizes,', CONFIG.excludeSizes);
+        logMessage(MODULE_NAME, 'Excluding ', gptSlotName,
+          'with sizes,', gptSlotSizes,
+          'as per CONFIG.excludeSizes,', CONFIG.excludeSizes);
         return true;
       }
     }
 
     return false;
   },
-
   // an array; in excludeCallbackFunction we will look into this array for gptSlotId if found then the gptSlot will be ignored
   excludeSlotIds: undefined,
-
   // an array; in excludeCallbackFunction we will look into this array for gptSlot size WxH (300x250) if found then the gptSlot will be ignored
   excludeSizes: undefined,
-
   // an object of objects;
   customConfig: undefined // will be an object for custom logic per gptSlot
 };
 
 let DEFAULT_SLOT_CONFIG = {}; // this will be set from the CONFIG
-
 // this object will hold the run-time config to be used after merging input-config and default-config
 let CONFIG = {};
-
 let DataStore = {};
 
 function getSlotLevelConfig(gptSlotName) {
@@ -214,46 +198,51 @@ function gptSlotRenderEndedHandler(event) {
   logMessage(MODULE_NAME, 'gptSlotRenderEndedHandler: gptSlotName', gptSlotName);
 
   if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
-    logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, 'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+    logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
+      'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
     return;
   }
 
   DataStore[gptSlotName] = DataStore[gptSlotName] || createDefaultDbEntry();
-  DataStore[gptSlotName]['lastRenderedAt'] = timestamp();
-  DataStore[gptSlotName]['renderedCount']++;
-  DataStore[gptSlotName]['inViewPercentage'] = 0;
-  DataStore[gptSlotName]['refreshRequested'] = false;
-  DataStore[gptSlotName]['hasCounterStarted'] = false;
-  DataStore[gptSlotName]['counterStartedAt'] = -1;
+  let dsEntry = getDataStoreEntry(gptSlotName);
+  dsEntry['lastRenderedAt'] = timestamp();
+  dsEntry['renderedCount']++;
+  dsEntry['inViewPercentage'] = 0;
+  dsEntry['refreshRequested'] = false;
+  dsEntry['hasCounterStarted'] = false;
+  dsEntry['counterStartedAt'] = -1;
 
   const slotConf = getSlotLevelConfig(gptSlotName);
 
-  if (isGptSlotMaxRefreshCountReached(gptSlotName, DataStore[gptSlotName]['renderedCount'], slotConf.maximumRefreshCount) === true) {
+  if (isGptSlotMaxRefreshCountReached(gptSlotName, dsEntry['renderedCount'], slotConf.maximumRefreshCount) === true) {
     return;
   }
 
-  if(slotConf.startCountdownWithMinimumViewabilityPercentage === 0){
-    DataStore[gptSlotName]['hasCounterStarted'] = true;
-    DataStore[gptSlotName]['counterStartedAt'] = timestamp();
+  if (slotConf.startCountdownWithMinimumViewabilityPercentage === 0) {
+    dsEntry['hasCounterStarted'] = true;
+    dsEntry['counterStartedAt'] = timestamp();
     logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName, 'after rendering the creative.');
     setTimeout(function() {
-      refreshSlotIfNeeded(gptSlotName, gptSlot, DataStore[gptSlotName], slotConf);
+      refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
     }, slotConf.countdownDuration);
   }
 }
 
 function gptSlotVisibilityChangedHandler(event) {
-  var gptSlot = event.slot;
+  let gptSlot = event.slot;
   const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
+  const slotConf = getSlotLevelConfig(gptSlotName);
+  let dsEntry = getDataStoreEntry(gptSlotName);
+
+  logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName,
+    'event.inViewPercentage', event.inViewPercentage);
 
   if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
-    logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName, ' from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
+    logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
+      'from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
     return;
   }
 
-  logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName, 'event.inViewPercentage', event.inViewPercentage);
-
-  let dsEntry = getDataStoreEntry(gptSlotName);
   if (dsEntry === null) {
     logMessage(MODULE_NAME, 'DS entry not found, nothing to do');
     return
@@ -262,40 +251,33 @@ function gptSlotVisibilityChangedHandler(event) {
   dsEntry['inViewPercentage'] = event.inViewPercentage;
   dsEntry['lastVisibilityChangedAt'] = timestamp();
 
-  const slotConf = getSlotLevelConfig(gptSlotName);
-
   if (isGptSlotMaxRefreshCountReached(gptSlotName, dsEntry['renderedCount'], slotConf.maximumRefreshCount) === true) {
     return;
   }
 
-  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'hasCounterStarted:', dsEntry['hasCounterStarted']);
-  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'startCountdownWithMinimumViewabilityPercentage:', slotConf.startCountdownWithMinimumViewabilityPercentage);
-  logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'inViewPercentage:', dsEntry['inViewPercentage']);
-
-  if(dsEntry['hasCounterStarted'] === false){    
-    if(slotConf.startCountdownWithMinimumViewabilityPercentage <= dsEntry['inViewPercentage']){
+  if (dsEntry['hasCounterStarted'] === false) {
+    if (slotConf.startCountdownWithMinimumViewabilityPercentage <= dsEntry['inViewPercentage']) {
       dsEntry['hasCounterStarted'] = true;
       dsEntry['counterStartedAt'] = timestamp();
-      logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName, 'after viewability confition is met. startCountdownWithMinimumViewabilityPercentage', slotConf.startCountdownWithMinimumViewabilityPercentage, 'inViewPercentage', dsEntry['inViewPercentage']);
+      logMessage(MODULE_NAME, 'started the countdown to refresh slot', gptSlotName,
+        'after viewability confition is met. startCountdownWithMinimumViewabilityPercentage',
+        slotConf.startCountdownWithMinimumViewabilityPercentage,
+        'inViewPercentage', dsEntry['inViewPercentage']);
       setTimeout(function() {
         refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
       }, slotConf.countdownDuration);
-    } else {
-      logMessage(MODULE_NAME, 'viewability condition not met.');
-      logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'startCountdownWithMinimumViewabilityPercentage:', slotConf.startCountdownWithMinimumViewabilityPercentage);
-      logMessage(MODULE_NAME, 'gptSlotName', gptSlotName, 'inViewPercentage:', dsEntry['inViewPercentage']);
     }
   } else {
     refreshSlotIfNeeded(gptSlotName, gptSlot, dsEntry, slotConf);
-  }  
+  }
 }
 
-function applyModuleConfig(){
+function applyModuleConfig() {
   // CONFIG = DEFAULT_CONFIG + Provided module config (higher priority)
   mergeDeep(CONFIG, DEFAULT_CONFIG, config.getConfig(MODULE_NAME) || {});
 }
 
-function setDefaultSlotConfig(){
+function setDefaultSlotConfig() {
   // Generate default slot config that will be applied if customConfig for a GPT slot is not found
   DEFAULT_SLOT_CONFIG = pick(CONFIG, [
     'countdownDuration',
