@@ -26,6 +26,16 @@
 
 # Use Cases
 
+- Simply enable the module with default config
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true
+    }
+});
+
+```
+
 - Refresh all GPT ad-slots after every 20 seconds
 ```
 pbjs.setConfig({
@@ -49,7 +59,7 @@ pbjs.setConfig({
 
 ```
 
-- Refresh all GPT ad-slots after every 20 seconds but only if GPT ad-slot is in view
+- Refresh all GPT ad-slots after 20 seconds but only if GPT ad-slot is in view 100%
 ```
 pbjs.setConfig({
     'pubmaticAutoRefresh': {
@@ -61,7 +71,7 @@ pbjs.setConfig({
 ```
 
 
-- Refresh all GPT ad-slots but only after the slot is viewed by user, refresh after 20 seconds
+- Refresh all GPT ad-slots but only after the slot is 100% viewed by the user, refresh after 20 seconds
 ```
 pbjs.setConfig({
     'pubmaticAutoRefresh': {
@@ -72,7 +82,7 @@ pbjs.setConfig({
 });
 ```
 
-- Refresh all GPT ad-slots but only after the slot is viewed by user, refresh after 20 seconds but when GPT ad-slot is in view
+- Refresh all GPT ad-slots but only after the slot is 100% viewed by user, refresh after 20 seconds but when GPT ad-slot is 100% in view
 ```
 pbjs.setConfig({
     'pubmaticAutoRefresh': {
@@ -80,6 +90,17 @@ pbjs.setConfig({
         countdownDuration: 20000,
         startCountdownWithMinimumViewabilityPercentage: 100, // or set to 50 for partially visible  
         refreshAdSlotWithMinimumViewabilityPercentage: 100 // or set to 50 for partially visible              
+    }
+});
+```
+
+- Refresh the GPT ad-slots after rendering (even if not viewed) and even when the ad-slot is not in the view
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        startCountdownWithMinimumViewabilityPercentage: 0, // or set to 50 for partially visible  
+        refreshAdSlotWithMinimumViewabilityPercentage: 0 // or set to 50 for partially visible              
     }
 });
 ```
@@ -149,11 +170,44 @@ pbjs.setConfig({
 });
 ```
 
-- Callback function to take control of refreshing
+- Change logic to generate gptSlotName, default is SlotElementId, change it to AdUnitPath. Before making any change please check the current implementation in the module.
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        slotIdFunctionForCustomConfig: function(gptSlot){ 
+            return gptSlot.getAdUnitPath() 
+        }
+    }
+});
+```
 
-- Change logic to generate gptSlotName
+- Change logic to find respective PBJS adUnit for my GPT ad-slot, this helps to find relation between gptSlot and pbjsAdUnit. Before making any change please check the current implementation in the module.
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU) {
+            return ( ("PBJS_" + gptSlot.getAdUnitPath()) === pbjsAU.code)
+        }
+    }
+});
+```
 
-- Change logic to find respective PBJS adUnit for my GPT ad-slot
+- Change Callback function to take control of refreshing GPT ad-slot. Before making any change please check the current implementation in the module.
+```
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
+            // set KeyValuePairs on gptSlot
+            // init pbjs auction for pbjsAdUnit
+            // after pbjs auction ends call the GAM for gptSlot
+            // you may want to failsafe as well
+        }
+    }
+});
+```
 
 # Drwaback
 - only onle slot is handled at a time
