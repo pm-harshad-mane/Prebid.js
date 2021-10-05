@@ -70,9 +70,9 @@ let DEFAULT_CONFIG = {
 
     let adServerInitiated = false;
 
-    let initAdServer = function() {
+    let sendAdserverRequest = function() {
       if (adServerInitiated === true) {
-        logMessage(MODULE_NAME, 'initAdServer already called for', gptSlotName);
+        logMessage(MODULE_NAME, 'function sendAdserverRequest already called for', gptSlotName);
         return;
       }
       adServerInitiated = true;
@@ -85,12 +85,12 @@ let DEFAULT_CONFIG = {
       adUnits: [pbjsAdUnit],
       bidsBackHandler: function() {
         logMessage(MODULE_NAME, 'In bidsBackHandler for', gptSlotName);
-        initAdServer();
+        sendAdserverRequest();
       }
     });
 
-    // to make sure we call initAdServer even when PrebidJS fails to execute bidsBackHandler
-    setTimeout(initAdServer, pbjsAuctionTimeoutFromLastAuction + 100)
+    // to make sure we call sendAdserverRequest even when PrebidJS fails to execute bidsBackHandler
+    setTimeout(sendAdserverRequest, pbjsAuctionTimeoutFromLastAuction + 100)
   },
 
   // a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
