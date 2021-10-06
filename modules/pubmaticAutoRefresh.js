@@ -60,6 +60,7 @@ let DEFAULT_CONFIG = {
       adUnits: [pbjsAdUnit],
       bidsBackHandler: function() {
         logMessage(MODULE_NAME, 'In bidsBackHandler for', gptSlotName);
+        getGlobal().setTargetingForGPTAsync([pbjsAdUnit.code]);
         sendAdserverRequest();
       }
     });
@@ -318,4 +319,4 @@ function init() {
 }
 
 events.on(EVENTS.BEFORE_REQUEST_BIDS, init);
-events.on(EVENTS.AUCTION_INIT, () => { pbjsAuctionTimeoutFromLastAuction = arguments[0].timeout });
+events.on(EVENTS.AUCTION_INIT, (arg) => { pbjsAuctionTimeoutFromLastAuction = arg.timeout });
