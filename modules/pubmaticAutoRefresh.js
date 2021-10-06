@@ -1,6 +1,11 @@
 // This module will work with GPT only.
 // The module will refresh the GPT ad-slots as per the given config.
 
+// Todo
+// move strings (key names) to local consts
+// review the all logs, remove unnecessary ones
+// logMessage vs logInfo vs logWarn
+
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
 import { EVENTS } from '../src/constants.json';
@@ -13,10 +18,83 @@ const MODULE_NAME = 'pubmaticAutoRefresh';
 let beforeRequestBidsHandlerAdded = false;
 let pbjsAuctionTimeoutFromLastAuction;
 
-// Todo
-// move strings (key names) to local consts
-// review the all logs, remove unnecessary ones
-// logMessage vs logInfo vs logWarn
+let pbjsSetup = {
+  callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
+    // todo: pick only required fields from the pbjsAdUnit
+
+    logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
+
+    // set the key-value pairs for auto-refresh functionality
+    Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
+
+    let adServerInitiated = false;
+
+    let sendAdserverRequest = function() {
+      if (adServerInitiated === true) {
+        logMessage(MODULE_NAME, 'function sendAdserverRequest already called for', gptSlotName);
+        return;
+      }
+      adServerInitiated = true;
+      logMessage(MODULE_NAME, 'refreshing GPT slot', gptSlotName);
+      window.googletag.pubads().refresh([gptSlot]);
+    }
+
+    getGlobal().requestBids({
+      timeout: pbjsAuctionTimeoutFromLastAuction,
+      adUnits: [pbjsAdUnit],
+      bidsBackHandler: function() {
+        logMessage(MODULE_NAME, 'In bidsBackHandler for', gptSlotName);
+        getGlobal().setTargetingForGPTAsync([pbjsAdUnit.code]);
+        sendAdserverRequest();
+      }
+    });
+
+    // to make sure we call sendAdserverRequest even when PrebidJS fails to execute bidsBackHandler
+    setTimeout(sendAdserverRequest, pbjsAuctionTimeoutFromLastAuction + 100)
+  },
+
+  gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU) {
+    return (gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)
+  }
+};
+
+let openWrapSetup = {
+  callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
+    // todo: pick only required fields from the pbjsAdUnit
+
+    logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot);
+
+    // set the key-value pairs for auto-refresh functionality
+    Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
+
+    let adServerInitiated = false;
+
+    let sendAdserverRequest = function() {
+      if (adServerInitiated === true) {
+        logMessage(MODULE_NAME, 'function sendAdserverRequest already called for', gptSlotName);
+        return;
+      }
+      adServerInitiated = true;
+      logMessage(MODULE_NAME, 'refreshing GPT slot', gptSlotName);
+      window.googletag.pubads().refresh([gptSlot]);
+    }
+
+    PWT.requestBids(
+        PWT.generateConfForGPT([gptSlot]),
+        function(adUnitsArray) {
+            PWT.addKeyValuePairsToGPTSlots(adUnitsArray);
+            sendAdserverRequest();
+        }
+    );
+
+    // to make sure we call sendAdserverRequest even when PrebidJS fails to execute bidsBackHandler
+    setTimeout(sendAdserverRequest, pbjsAuctionTimeoutFromLastAuction + 100)
+  },
+
+  gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU) {
+    return gptSlot.getSlotElementId() === pbjsAU.code
+  }
+};
 
 let DEFAULT_CONFIG = {
   enabled: false,
