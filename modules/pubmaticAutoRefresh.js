@@ -241,7 +241,7 @@ function gptSlotRenderEndedHandler(event) {
   let gptSlot = event.slot;
   const gptSlotName = CONFIG.slotIdFunctionForCustomConfig(gptSlot);
 
-  logMessage(MODULE_NAME, 'gptSlotRenderEndedHandler: gptSlotName', gptSlotName);
+  // logMessage(MODULE_NAME, 'gptSlotRenderEndedHandler: gptSlotName', gptSlotName);
 
   if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
     logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
@@ -280,8 +280,8 @@ function gptSlotVisibilityChangedHandler(event) {
   const slotConf = getSlotLevelConfig(gptSlotName);
   let dsEntry = getDataStoreEntry(gptSlotName);
 
-  logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName,
-    'event.inViewPercentage', event.inViewPercentage);
+  // logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName,
+  //   'event.inViewPercentage', event.inViewPercentage);
 
   if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
     logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
