@@ -14,6 +14,7 @@ import { getGlobal } from '../src/prebidGlobal.js';
 import find from 'core-js-pure/features/array/find.js';
 
 const MODULE_NAME = 'pubmaticAutoRefresh';
+const isOpenWrapSetup = false;
 
 let beforeRequestBidsHandlerAdded = false;
 let pbjsAuctionTimeoutFromLastAuction;
@@ -113,47 +114,13 @@ let DEFAULT_CONFIG = {
   // this key will be added on the gptSlot and its value will be the refresh count; set it to null to not set it
   kvKeyForRefreshCount: 'pm-auto-refresh-count',
   // a function; the default callback function
-  callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
-    // todo: pick only required fields from the pbjsAdUnit
-
-    logMessage(MODULE_NAME, 'time to refresh', gptSlotName, gptSlot, pbjsAdUnit);
-
-    // set the key-value pairs for auto-refresh functionality
-    Object.keys(KeyValuePairs).forEach(key => gptSlot.setTargeting(key, KeyValuePairs[key]));
-
-    let adServerInitiated = false;
-
-    let sendAdserverRequest = function() {
-      if (adServerInitiated === true) {
-        logMessage(MODULE_NAME, 'function sendAdserverRequest already called for', gptSlotName);
-        return;
-      }
-      adServerInitiated = true;
-      logMessage(MODULE_NAME, 'refreshing GPT slot', gptSlotName);
-      window.googletag.pubads().refresh([gptSlot]);
-    }
-
-    getGlobal().requestBids({
-      timeout: pbjsAuctionTimeoutFromLastAuction,
-      adUnits: [pbjsAdUnit],
-      bidsBackHandler: function() {
-        logMessage(MODULE_NAME, 'In bidsBackHandler for', gptSlotName);
-        getGlobal().setTargetingForGPTAsync([pbjsAdUnit.code]);
-        sendAdserverRequest();
-      }
-    });
-
-    // to make sure we call sendAdserverRequest even when PrebidJS fails to execute bidsBackHandler
-    setTimeout(sendAdserverRequest, pbjsAuctionTimeoutFromLastAuction + 100)
-  },
+  callbackFunction: isOpenWrapSetup ? openWrapSetup.callbackFunction : pbjsSetup.callbackFunction,
   // a function; if you are using customConfig for some gptSlots then we need a way to find name of the gptSlot in customConfig
   slotIdFunctionForCustomConfig: function(gptSlot) {
     return gptSlot.getSlotElementId();
   },
   // a function; this function will help find the GPT gptSlots matching PBJS AdUnit
-  gptSlotToPbjsAdUnitMapFunction: function(gptSlotName, gptSlot, pbjsAU) {
-    return (gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)
-  },
+  gptSlotToPbjsAdUnitMapFunction: isOpenWrapSetup ? openWrapSetup.gptSlotToPbjsAdUnitMapFunction : pbjsSetup.gptSlotToPbjsAdUnitMapFunction,
   // a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
   excludeCallbackFunction: function(gptSlotName, gptSlot) {
     // first check if gptSlotName is present in CONFIG.excludeSlotIds array
