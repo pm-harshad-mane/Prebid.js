@@ -27,6 +27,7 @@ const isOpenWrapSetup = false;
 
 let beforeRequestBidsHandlerAdded = false;
 let pbjsAuctionTimeoutFromLastAuction;
+let excludedGptSlotNames = {};
 
 let pbjsSetup = {
   callbackFunction: function(gptSlotName, gptSlot, pbjsAdUnit, KeyValuePairs) {
@@ -252,7 +253,11 @@ function gptSlotRenderEndedHandler(event) {
 
   // logMessage(MODULE_NAME, 'gptSlotRenderEndedHandler: gptSlotName', gptSlotName);
 
-  if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
+  // delete exclusion entry and revaluate
+  delete excludedGptSlotNames[gptSlotName];
+
+  if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot, event) === true) {
+    excludedGptSlotNames[gptSlotName] = true;
     logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
       'from auto-refreshing as per config.excludeCallbackFunction. gptSlot:', gptSlot);
     return;
@@ -292,7 +297,7 @@ function gptSlotVisibilityChangedHandler(event) {
   // logMessage(MODULE_NAME, 'gptSlotVisibilityChangedHandler: gptSlotName', gptSlotName,
   //   'event.inViewPercentage', event.inViewPercentage);
 
-  if (isFn(CONFIG.excludeCallbackFunction) && CONFIG.excludeCallbackFunction(gptSlotName, gptSlot) === true) {
+  if (excludedGptSlotNames[gptSlotName] === true) {
     logMessage(MODULE_NAME, 'Excluding the gptSlotName', gptSlotName,
       'from logging viewability change as per config.excludeCallbackFunction. gptSlot:', gptSlot);
     return;
