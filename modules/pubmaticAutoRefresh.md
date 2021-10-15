@@ -20,7 +20,7 @@
 | gptSlotToPbjsAdUnitMapFunction | function | `(gptSlot) => (gptSlot.getAdUnitPath() === pbjsAU.code || gptSlot.getSlotElementId() === pbjsAU.code)` | this function will help find the GPT gptSlots matching PBJS AdUnit |
 | excludeCallbackFunction | function | `(gptSlotName, gptSlot) => { return true if gptSlotName is found in config.excludeSlotIds else return true if gptSlot size is found in config.excludeSizes else return false }` | if this function returns true then we will ignore the gptSlot and not try to refresh it |
 | excludeSlotIds | array of strings | undefined | in excludeCallbackFunction we will look into this array for gptSlotId if found then the gptSlot will be ignored |
-| excludeSizes | array of strings | undefined | in excludeCallbackFunction we will look into this array for gptSlot size WxH (300x250) if found then the gptSlot will be ignored |
+| excludeSizes | array of strings | undefined | in excludeCallbackFunction we will look into the array of supported sizes for gptSlot size WxH (300x250) if found then the gptSlot will be ignored |
 | customConfig | Object | undefined | if you want to have seperate value for any of the following supported configs for any gptAdSlot then you can enter it here. Supported custom configs ` maximumRefreshCount, countdownDuration, startCountdownWithMinimumViewabilityPercentage, refreshAdSlotWithMinimumViewabilityPercentage, kvKeyForRefresh, kvValueForRefresh, kvKeyForRefreshCount, callbackFunction, gptSlotToPbjsAdUnitMapFunction, excludeCallbackFunction ` Example: `{ 'Div-1' : { maximumRefreshCount: 5 }, 'Div-Top-1': { countdownDuration: 50000 } }` |
 
 
