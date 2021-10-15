@@ -6,14 +6,13 @@
 // review the all logs, remove unnecessary ones
 // logMessage vs logInfo vs logWarn
 
-// we should pass GAM creqative detail like campaignId, lineItemId, adverttiserId to excludeCallbackFunction
+// we should pass GAM creative detail like campaignId, lineItemId, adverttiserId to excludeCallbackFunction
 // so excludeCallbackFunction should execute only once after render not after visibility change
 // after render check the value and cache it  defaults to false (not excluded)
 // after visibility change check from cache
 // - use slots[0].getSlotId().getId() to cache the exclusion-check-value
 // reset the value after render
-
-
+// document it! with example try it!
 
 import { config } from '../src/config.js';
 import * as events from '../src/events.js';
