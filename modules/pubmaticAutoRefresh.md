@@ -130,7 +130,7 @@ pbjs.setConfig({
 pbjs.setConfig({
     'pubmaticAutoRefresh': {
         enabled: true,
-        excludeCallbackFunction: function(gptSlotName, gptSlot){
+        excludeCallbackFunction: function(gptSlotName, gptSlot, event){
         	// gptSlotName is derived as per slotIdFunctionForCustomConfig
         	// custom logic goes here
         	// return true to exclude
@@ -138,6 +138,24 @@ pbjs.setConfig({
         }
     }
 });
+```
+
+- Do not refresh GPT ad slot if GPT creativeId = 1234, refer https://developers.google.com/publisher-tag/reference#googletag.events.slotrenderendedevent for `event` specification
+
+````
+pbjs.setConfig({
+    'pubmaticAutoRefresh': {
+        enabled: true,
+        excludeCallbackFunction: function(gptSlotName, gptSlot, event){
+            if(event.creativeId === 1234){
+                console.log('excludeCallbackFunction, returning true as creativeId is 1234');
+                return true;
+            }
+            return false;
+        }
+    }
+});
+
 ```
 
 - Change key value pairs to be used
