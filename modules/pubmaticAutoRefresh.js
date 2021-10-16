@@ -131,7 +131,7 @@ let DEFAULT_CONFIG = {
   // a function; this function will help find the GPT gptSlots matching PBJS AdUnit
   gptSlotToPbjsAdUnitMapFunction: isOpenWrapSetup ? openWrapSetup.gptSlotToPbjsAdUnitMapFunction : pbjsSetup.gptSlotToPbjsAdUnitMapFunction,
   // a function; if the following function returns true then we will ignore the gptSlot and not try to refresh it
-  excludeCallbackFunction: function(gptSlotName, gptSlot) {
+  excludeCallbackFunction: function(gptSlotName, gptSlot, event) {
     // first check if gptSlotName is present in CONFIG.excludeSlotIds array
     if (isArray(CONFIG.excludeSlotIds) && CONFIG.excludeSlotIds.indexOf(gptSlotName) !== -1) {
       logMessage(MODULE_NAME, 'Excluding ', gptSlotName, 'as per CONFIG.excludeSlotIds,', CONFIG.excludeSlotIds);
