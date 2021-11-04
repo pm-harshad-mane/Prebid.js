@@ -5,7 +5,8 @@ import {
   adUnitsFilter, flatten, getHighestCpm, isArrayOfNums, isGptPubadsDefined, uniques, logInfo,
   contains, logError, isArray, deepClone, deepAccess, isNumber, logWarn, logMessage, isFn,
   transformAdServerTargetingObj, bind, replaceAuctionPrice, replaceClickThrough, insertElement,
-  inIframe, callBurl, createInvisibleIframe, generateUUID, unsupportedBidderMessage, isEmpty
+  inIframe, callBurl, createInvisibleIframe, generateUUID, unsupportedBidderMessage, isEmpty,
+  isStr
 } from './utils.js';
 import { listenMessagesFromCreative } from './secureCreatives.js';
 import { userSync } from './userSync.js';
@@ -28,7 +29,7 @@ const { triggerUserSyncs } = userSync;
 
 /* private variables */
 const { ADD_AD_UNITS, BID_WON, REQUEST_BIDS, SET_TARGETING, AD_RENDER_FAILED, AD_RENDER_SUCCEEDED, STALE_RENDER } = CONSTANTS.EVENTS;
-const { PREVENT_WRITING_ON_MAIN_DOCUMENT, NO_AD, EXCEPTION, CANNOT_FIND_AD, MISSING_DOC_OR_ADID } = CONSTANTS.AD_RENDER_FAILED_REASON;
+const { PREVENT_WRITING_ON_MAIN_DOCUMENT, NO_AD, EXCEPTION, CANNOT_FIND_AD, MISSING_DOC_OR_ADID, MISSING_AD_SLOT } = CONSTANTS.AD_RENDER_FAILED_REASON;
 
 const eventValidators = {
   bidWon: checkDefinedPlacement
@@ -406,13 +407,32 @@ function emitAdRenderSucceeded({ doc, bid, id }) {
 /**
  * This function will render the ad (based on params) in the given iframe document passed through.
  * Note that doc SHOULD NOT be the parent document page as we can't doc.write() asynchronously
- * @param  {HTMLDocument} doc document
+ * @param  {HTMLDocument} doc document || querySelector string (to find element in which we will create a friendly-iframe to render ad)
  * @param  {string} id bid id to locate the ad
  * @alias module:pbjs.renderAd
  */
 $$PREBID_GLOBAL$$.renderAd = hook('async', function (doc, id, options) {
   logInfo('Invoking $$PREBID_GLOBAL$$.renderAd', arguments);
   logMessage('Calling renderAd with adId :' + id);
+
+  // if first argument, doc, is string then it is QuerySelector for the adSlot-HTML-element
+  // we will create a friendly-iframe inside the adSlot-HTML-element and render the ad in the friendly-iframe
+  if(isStr(doc)){
+    let querySelectorString = doc;
+    logInfo('$$PREBID_GLOBAL$$.renderAd: First argument received is querySelector string:', querySelectorString);
+    let adSlotHtmlElement = document.querySelector(querySelectorString);
+    if(adSlotHtmlElement){
+      const fIframe = createInvisibleIframe();
+      fIframe.style.display = 'block';
+      fIframe.setAttribute('allowtransparency', "true");
+      adSlotHtmlElement.appendChild(fIframe);
+      doc = fIframe.contentWindow.document;
+    } else {
+      const adSlotNotFound = 'Couldn\'t find the adSlot for querySelector string: ' + querySelectorString;
+      emitAdRenderFail({ reason: MISSING_AD_SLOT, message: adSlotNotFound, id });      
+      return;
+    }    
+  }
 
   if (doc && id) {
     try {
