@@ -6,7 +6,8 @@
 import {config} from '../../src/config.js';
 import {setupBeforeHookFnOnce, getHook} from '../../src/hook.js';
 import {
-  logWarn, deepAccess, getUniqueIdentifierStr, deepSetValue, groupBy
+  logWarn, deepAccess, getUniqueIdentifierStr, deepSetValue, groupBy,
+  isStr, isNumber, isArray
 } from '../../src/utils.js';
 import events from '../../src/events.js';
 import CONSTANTS from '../../src/constants.json';
@@ -20,7 +21,12 @@ let multibidUnits = {};
 
 // Storing this globally on init for easy reference to configuration
 config.getConfig(MODULE_NAME, conf => {
-  if (!Array.isArray(conf.multibid) || !conf.multibid.length || !validateMultibid(conf.multibid)) return;
+  // do nothing if config is invalid
+  if (!isArray(conf.multibid) ||
+    !conf.multibid.length ||
+    !validateMultibid(conf.multibid)) {
+    return;
+  }
 
   resetMultiConfig();
   hasMultibid = true;
@@ -51,7 +57,8 @@ export function validateMultibid(conf) {
   let check = true;
   let duplicate = conf.filter(entry => {
     // Check if entry.bidder is not defined or typeof string, filter entry and reset configuration
-    if ((!entry.bidder || typeof entry.bidder !== 'string') && (!entry.bidders || !Array.isArray(entry.bidders))) {
+    if ((!entry.bidder || !isStr(entry.bidder)) &&
+      (!entry.bidders || !isArray(entry.bidders))) {
       logWarn('Filtering multibid entry. Missing required bidder or bidders property.');
       check = false;
       return false;
@@ -61,15 +68,19 @@ export function validateMultibid(conf) {
   }).map(entry => {
     // Check if entry.maxbids is not defined, not typeof number, or less than 1, set maxbids to 1 and reset configuration
     // Check if entry.maxbids is greater than 9, set maxbids to 9 and reset configuration
-    if (typeof entry.maxBids !== 'number' || entry.maxBids < 1 || entry.maxBids > 9) {
-      entry.maxBids = (typeof entry.maxBids !== 'number' || entry.maxBids < 1) ? 1 : 9;
+    if (!isNumber(entry.maxBids) ||
+      entry.maxBids < 1 ||
+      entry.maxBids > 9) {
+      entry.maxBids = (!isNumber(entry.maxBids) || entry.maxBids < 1) ? 1 : 9;
       check = false;
     }
 
     return entry;
   });
 
-  if (!check) config.setConfig({multibid: duplicate});
+  if (!check) {
+    config.setConfig({multibid: duplicate});
+  }
 
   return check;
 }
@@ -101,40 +112,66 @@ export function adjustBidderRequestsHook(fn, bidderRequests) {
 export function addBidResponseHook(fn, adUnitCode, bid) {
   let floor = deepAccess(bid, 'floorData.floorValue');
 
-  if (!config.getConfig('multibid')) resetMultiConfig();
+  if (!config.getConfig('multibid')) {
+    resetMultiConfig();
+  }
+
   // Checks if multiconfig exists and bid bidderCode exists within config and is an adpod bid
   // Else checks if multiconfig exists and bid bidderCode exists within config
   // Else continue with no modifications
-  if (hasMultibid && multiConfig[bid.bidderCode] && deepAccess(bid, 'video.context') === 'adpod') {
+  if (hasMultibid &&
+    multiConfig[bid.bidderCode] &&
+    deepAccess(bid, 'video.context') === 'adpod') {
     fn.call(this, adUnitCode, bid);
   } else if (hasMultibid && multiConfig[bid.bidderCode]) {
     // Set property multibidPrefix on bid
-    if (multiConfig[bid.bidderCode].prefix) bid.multibidPrefix = multiConfig[bid.bidderCode].prefix;
+    if (multiConfig[bid.bidderCode].prefix) {
+      bid.multibidPrefix = multiConfig[bid.bidderCode].prefix;
+    }
+
     bid.originalBidder = bid.bidderCode;
+
     // Check if stored bids for auction include adUnitCode.bidder and max limit not reach for ad unit
     if (deepAccess(multibidUnits, [adUnitCode, bid.bidderCode])) {
       // Store request id under new property originalRequestId, create new unique bidId,
       // and push bid into multibid stored bids for auction if max not reached and bid cpm above floor
-      if (!multibidUnits[adUnitCode][bid.bidderCode].maxReached && (!floor || floor <= bid.cpm)) {
+      if (!multibidUnits[adUnitCode][bid.bidderCode].maxReached &&
+        (!floor || floor <= bid.cpm)) {
         bid.originalRequestId = bid.requestId;
-
         bid.requestId = getUniqueIdentifierStr();
         multibidUnits[adUnitCode][bid.bidderCode].ads.push(bid);
 
         let length = multibidUnits[adUnitCode][bid.bidderCode].ads.length;
 
-        if (multiConfig[bid.bidderCode].prefix) bid.targetingBidder = multiConfig[bid.bidderCode].prefix + length;
-        if (length === multiConfig[bid.bidderCode].maxbids) multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+        if (multiConfig[bid.bidderCode].prefix) {
+          bid.targetingBidder = multiConfig[bid.bidderCode].prefix + length;
+        }
+
+        if (length === multiConfig[bid.bidderCode].maxbids) {
+          multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+        }
 
         fn.call(this, adUnitCode, bid);
       } else {
-        logWarn(`Filtering multibid received from bidder ${bid.bidderCode}: ` + ((multibidUnits[adUnitCode][bid.bidderCode].maxReached) ? `Maximum bid limit reached for ad unit code ${adUnitCode}` : 'Bid cpm under floors value.'));
+        let warningText;
+        if (multibidUnits[adUnitCode][bid.bidderCode].maxReached) {
+          warningText = `Maximum bid limit reached for ad unit code ${adUnitCode}`;
+        } else {
+          warningText = 'Bid cpm under floors value.';
+        }
+        logWarn(`Filtering multibid received from bidder ${bid.bidderCode}: ${warningText}`);
       }
     } else {
-      if (deepAccess(bid, 'floorData.floorValue')) deepSetValue(multibidUnits, [adUnitCode, bid.bidderCode], {floor: deepAccess(bid, 'floorData.floorValue')});
+      if (deepAccess(bid, 'floorData.floorValue')) {
+        deepSetValue(multibidUnits, [adUnitCode, bid.bidderCode],
+          {floor: deepAccess(bid, 'floorData.floorValue')});
+      }
 
       deepSetValue(multibidUnits, [adUnitCode, bid.bidderCode], {ads: [bid]});
-      if (multibidUnits[adUnitCode][bid.bidderCode].ads.length === multiConfig[bid.bidderCode].maxbids) multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+
+      if (multibidUnits[adUnitCode][bid.bidderCode].ads.length === multiConfig[bid.bidderCode].maxbids) {
+        multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+      }
 
       fn.call(this, adUnitCode, bid);
     }
@@ -168,7 +205,10 @@ export function sortByMultibid(a, b) {
    * @param {Boolean} default set to false, this hook modifies targeting and sets to true
 */
 export function targetBidPoolHook(fn, bidsReceived, highestCpmCallback, adUnitBidLimit = 0, hasModified = false) {
-  if (!config.getConfig('multibid')) resetMultiConfig();
+  if (!config.getConfig('multibid')) {
+    resetMultiConfig();
+  }
+
   if (hasMultibid) {
     const dealPrioritization = config.getConfig('sendBidsControl.dealPrioritization');
     let modifiedBids = [];
@@ -180,24 +220,38 @@ export function targetBidPoolHook(fn, bidsReceived, highestCpmCallback, adUnitBi
       let adjustedBids = [].concat.apply([], Object.keys(bidsByBidderName).map(key => {
         // Reset all bidderCodes to original bidder values and sort by CPM
         return bidsByBidderName[key].sort((bidA, bidB) => {
-          if (bidA.originalBidder && bidA.originalBidder !== bidA.bidderCode) bidA.bidderCode = bidA.originalBidder;
-          if (bidA.originalBidder && bidB.originalBidder !== bidB.bidderCode) bidB.bidderCode = bidB.originalBidder;
+          if (bidA.originalBidder && bidA.originalBidder !== bidA.bidderCode) {
+            bidA.bidderCode = bidA.originalBidder;
+          }
+          if (bidA.originalBidder && bidB.originalBidder !== bidB.bidderCode) {
+            bidB.bidderCode = bidB.originalBidder;
+          }
           return bidA.cpm > bidB.cpm ? -1 : (bidA.cpm < bidB.cpm ? 1 : 0);
         }).map((bid, index) => {
-          // For each bid (post CPM sort), set dynamic bidderCode using prefix and index if less than maxbid amount
-          if (deepAccess(multiConfig, `${bid.bidderCode}.prefix`) && index !== 0 && index < multiConfig[bid.bidderCode].maxbids) {
+          // For each bid (post CPM sort),
+          //    set dynamic bidderCode using prefix and index if less than maxbid amount
+          if (deepAccess(multiConfig, `${bid.bidderCode}.prefix`) &&
+            index !== 0 &&
+            index < multiConfig[bid.bidderCode].maxbids) {
             bid.bidderCode = multiConfig[bid.bidderCode].prefix + (index + 1);
           }
 
           return bid
         })
       }));
+
       // Get adjustedBids by bidderCode and reduce using highestCpmCallback
       let bidsByBidderCode = groupBy(adjustedBids, 'bidderCode');
-      Object.keys(bidsByBidderCode).forEach(key => bucketBids.push(bidsByBidderCode[key].reduce(highestCpmCallback)));
+      Object.keys(bidsByBidderCode).forEach(
+        key => bucketBids.push(bidsByBidderCode[key]
+          .reduce(highestCpmCallback)));
+
       // if adUnitBidLimit is set, pass top N number bids
       if (adUnitBidLimit > 0) {
-        bucketBids = dealPrioritization ? bucketBids.sort(sortByDealAndPriceBucketOrCpm(true)) : bucketBids.sort((a, b) => b.cpm - a.cpm);
+        bucketBids = dealPrioritization
+          ? bucketBids.sort(sortByDealAndPriceBucketOrCpm(true))
+          : bucketBids.sort((a, b) => b.cpm - a.cpm);
+
         bucketBids.sort(sortByMultibid);
         modifiedBids.push(...bucketBids.slice(0, adUnitBidLimit));
       } else {
