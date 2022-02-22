@@ -1288,6 +1288,20 @@ export const spec = {
               }
 
               bidResponses.push(newBid);
+              let aNewBid = deepClone(newBid);
+              aNewBid.cpm = 1.2;              
+              bidResponses.push(newBid);
+
+              let aNewBid2 = deepClone(newBid);
+              aNewBid2.bidderCode = 'groupm';
+              aNewBid2.cpm *= 5;
+              bidResponses.push(aNewBid2);
+
+              let aNewBid3 = deepClone(newBid);
+              aNewBid3.bidderCode = 'groupm';
+              aNewBid3.cpm *= 3;
+              bidResponses.push(aNewBid3);
+              
             });
         });
       }
