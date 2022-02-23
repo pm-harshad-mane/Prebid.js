@@ -101,7 +101,9 @@ export function adjustBidderRequestsHook(fn, bidderRequests) {
 export function addBidResponseHook(fn, adUnitCode, bid) {
   let floor = deepAccess(bid, 'floorData.floorValue');
 
-  if (!config.getConfig('multibid')) resetMultiConfig();
+  if (!config.getConfig('multibid')){
+    resetMultiConfig();
+  }
   // Checks if multiconfig exists and bid bidderCode exists within config and is an adpod bid
   // Else checks if multiconfig exists and bid bidderCode exists within config
   // Else continue with no modifications
@@ -109,7 +111,9 @@ export function addBidResponseHook(fn, adUnitCode, bid) {
     fn.call(this, adUnitCode, bid);
   } else if (hasMultibid && multiConfig[bid.bidderCode]) {
     // Set property multibidPrefix on bid
-    if (multiConfig[bid.bidderCode].prefix) bid.multibidPrefix = multiConfig[bid.bidderCode].prefix;
+    if (multiConfig[bid.bidderCode].prefix){
+      bid.multibidPrefix = multiConfig[bid.bidderCode].prefix;
+    }
     bid.originalBidder = bid.bidderCode;
     // Check if stored bids for auction include adUnitCode.bidder and max limit not reach for ad unit
     if (deepAccess(multibidUnits, [adUnitCode, bid.bidderCode])) {
@@ -123,8 +127,13 @@ export function addBidResponseHook(fn, adUnitCode, bid) {
 
         let length = multibidUnits[adUnitCode][bid.bidderCode].ads.length;
 
-        if (multiConfig[bid.bidderCode].prefix) bid.targetingBidder = multiConfig[bid.bidderCode].prefix + length;
-        if (length === multiConfig[bid.bidderCode].maxbids) multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+        if (multiConfig[bid.bidderCode].prefix){
+          bid.targetingBidder = multiConfig[bid.bidderCode].prefix + length;
+        }
+
+        if (length === multiConfig[bid.bidderCode].maxbids){
+          multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+        }
 
         fn.call(this, adUnitCode, bid);
       } else {
@@ -134,7 +143,10 @@ export function addBidResponseHook(fn, adUnitCode, bid) {
       if (deepAccess(bid, 'floorData.floorValue')) deepSetValue(multibidUnits, [adUnitCode, bid.bidderCode], {floor: deepAccess(bid, 'floorData.floorValue')});
 
       deepSetValue(multibidUnits, [adUnitCode, bid.bidderCode], {ads: [bid]});
-      if (multibidUnits[adUnitCode][bid.bidderCode].ads.length === multiConfig[bid.bidderCode].maxbids) multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+
+      if (multibidUnits[adUnitCode][bid.bidderCode].ads.length === multiConfig[bid.bidderCode].maxbids){
+        multibidUnits[adUnitCode][bid.bidderCode].maxReached = true;
+      }
 
       fn.call(this, adUnitCode, bid);
     }
