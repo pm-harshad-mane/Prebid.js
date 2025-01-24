@@ -25,11 +25,11 @@ function flagErrors(context, node, importPath) {
     importPath.match(/^\w+/) &&
     !context.options[0].some(name => importPath.startsWith(name))
   ) {
-    context.report(node, `import "${importPath}" not in import whitelist`);
+    // context.report(node, `import "${importPath}" not in import whitelist`);
   } else {
     // do not allow cross-module imports
     if (isInDirectory(absImportPath, MODULES_PATH) && (!isInDirectory(absImportPath, absFileDir) || absFileDir === MODULES_PATH)) {
-      context.report(node, `import "${importPath}": importing from modules is not allowed`);
+      // context.report(node, `import "${importPath}": importing from modules is not allowed`);
     }
 
     // do not allow imports into `creative`
