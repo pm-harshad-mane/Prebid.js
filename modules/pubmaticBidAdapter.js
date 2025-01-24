@@ -5,6 +5,7 @@ import { config } from '../src/config.js';
 import { Renderer } from '../src/Renderer.js';
 import { bidderSettings } from '../src/bidderSettings.js';
 import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIVE_ASSET_TYPES } from '../src/constants.js';
+import { ORTBRequest2 } from './proto/ortb2-static.js';
 
 /**
  * @typedef {import('../src/adapters/bidderFactory.js').BidRequest} BidRequest
@@ -15,6 +16,7 @@ import { NATIVE_IMAGE_TYPES, NATIVE_KEYS_THAT_ARE_NOT_ASSETS, NATIVE_KEYS, NATIV
 const BIDDER_CODE = 'pubmatic';
 const LOG_WARN_PREFIX = 'PubMatic: ';
 const ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=prebid-client';
+const PROTO_ENDPOINT = 'https://hbopenbid.pubmatic.com/translator?source=prebid-client&type=proto';
 const USER_SYNC_URL_IFRAME = 'https://ads.pubmatic.com/AdServer/js/user_sync.html?kdntuid=1&p=';
 const USER_SYNC_URL_IMAGE = 'https://image8.pubmatic.com/AdServer/ImgSync?p=';
 const DEFAULT_CURRENCY = 'USD';
@@ -1078,6 +1080,10 @@ export function prepareMetaObject(br, bid, seat) {
   }
 }
 
+function protoEncoder(payload) {
+  return ORTBRequest2.encode(payload).finish();
+}
+
 export const spec = {
   code: BIDDER_CODE,
   gvlid: 76,
@@ -1094,6 +1100,14 @@ export const spec = {
         logWarn(LOG_WARN_PREFIX + 'Error: publisherId is mandatory and cannot be numeric (wrap it in quotes in your config). Call to OpenBid will not be sent for ad unit: ' + JSON.stringify(bid));
         return false;
       }
+
+      // introducing a new parameter "useProto" to tell us whether to use Proto or not; default false
+      // if useProto is true, then we another parameter, useProtoPercentage, to tell us the percentage of traffic to be sent to Proto, should be present
+      if (bid.params.useProto && !bid.params.useProtoPercentage) {
+        logWarn(LOG_WARN_PREFIX + 'Error: useProtoPercentage is mandatory when useProto is true. Call to OpenBid will not be sent for ad unit: ' + JSON.stringify(bid));
+        return false;
+      }
+
       // video ad validation
       if (FEATURES.VIDEO && bid.hasOwnProperty('mediaTypes') && bid.mediaTypes.hasOwnProperty(VIDEO)) {
         // bid.mediaTypes.video.mimes OR bid.params.video.mimes should be present and must be a non-empty array
@@ -1170,6 +1184,8 @@ export const spec = {
         }
       }
       conf.pubId = conf.pubId || bid.params.publisherId;
+      conf.useProto = bid.params.useProto;
+      conf.useProtoPercentage = bid.params.useProtoPercentage;
       conf = _handleCustomParams(bid.params, conf);
       conf.transactionId = bid.ortb2Imp?.ext?.tid;
       if (bidCurrency === '') {
@@ -1366,10 +1382,26 @@ export const spec = {
       delete payload.site;
     }
 
+    let biddingEndpoint = ENDPOINT;
+    let requestPayload = JSON.stringify(payload);
+
+    // if conf.useProto is set , pick a random number between 0 and 100... if it is less than conf.useProtoPercentage,
+    //    then encode the payload in proto format and use different endpoint
+    //    else continue with JSON format and use the default endpoint
+    if (conf.useProto && conf.useProtoPercentage) {
+      let random = Math.floor(Math.random() * 100);
+      if (random < conf.useProtoPercentage) {
+        biddingEndpoint = PROTO_ENDPOINT;
+        requestPayload = protoEncoder(payload);
+        // console.log(LOG_INFO_PREFIX + 'Using Proto format for request');
+        // console.log(LOG_INFO_PREFIX + 'Proto Payload: ', requestPayload);
+      }
+    }
+
     return {
       method: 'POST',
-      url: ENDPOINT,
-      data: JSON.stringify(payload),
+      url: biddingEndpoint,
+      data: requestPayload,
       bidderRequest: bidderRequest
     };
   },
