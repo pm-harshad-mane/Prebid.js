@@ -497,7 +497,12 @@ export const processBidderRequests = hook('sync', function (spec, bids, bidderRe
             success: onSuccess,
             error: onFailure
           },
-          typeof request.data === 'string' ? request.data : JSON.stringify(request.data),
+          // typeof request.data === 'string' ? request.data : JSON.stringify(request.data),
+          typeof request.data === 'string'
+            ? request.data
+            : request.data instanceof Uint8Array
+              ? request.data
+              : JSON.stringify(request.data),
           getOptions({
             method: 'POST',
             contentType: 'text/plain',
