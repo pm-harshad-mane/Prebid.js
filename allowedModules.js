@@ -8,7 +8,8 @@ module.exports = {
     'fun-hooks/no-eval',
     'klona',
     'dlv',
-    'dset'
+    'dset',
+    'protobufjs'
   ],
   'libraries': [
   ],
