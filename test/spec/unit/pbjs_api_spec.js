@@ -244,14 +244,27 @@ describe('Unit: Prebid Module', function () {
     });
 
     ['cmd', 'que'].forEach(prop => {
-      it(`should patch ${prop}.push`, () => {
-        $$PREBID_GLOBAL$$[prop].push = false;
-        $$PREBID_GLOBAL$$.processQueue();
-        let ran = false;
-        $$PREBID_GLOBAL$$[prop].push(() => { ran = true; });
-        expect(ran).to.be.true;
+      describe(`using .${prop}`, () => {
+        let queue, ran;
+        beforeEach(() => {
+          ran = false;
+          queue = $$PREBID_GLOBAL$$[prop] = [];
+        });
+        after(() => {
+          $$PREBID_GLOBAL$$.processQueue();
+        })
+
+        function pushToQueue() {
+          queue.push(() => { ran = true });
+        }
+
+        it(`should patch .push`, () => {
+          $$PREBID_GLOBAL$$.processQueue();
+          pushToQueue();
+          expect(ran).to.be.true;
+        });
       })
-    })
+    });
   })
 
   describe('and global adUnits', () => {
@@ -1381,17 +1394,19 @@ describe('Unit: Prebid Module', function () {
       });
     });
 
-    it('fires billing url if present on s2s bid', function () {
-      const burl = 'http://www.example.com/burl';
+    it('fires impression trackers if present', function () {
+      const url = 'http://www.example.com/burl';
       pushBidResponseToAuction({
         ad: '<div>ad</div>',
         source: 's2s',
-        burl
+        eventtrackers: [
+          {event: 1, method: 1, url}
+        ]
       });
 
       return renderAd(doc, bidId).then(() => {
         sinon.assert.calledOnce(triggerPixelStub);
-        sinon.assert.calledWith(triggerPixelStub, burl);
+        sinon.assert.calledWith(triggerPixelStub, url);
       });
     });
 
@@ -1838,6 +1853,29 @@ describe('Unit: Prebid Module', function () {
             ortb2Fragments: {global: mergedFPD}
           }));
         });
+
+        it('that cannot alter global config', () => {
+          configObj.setConfig({ortb2: {value: 'old'}});
+          startAuctionStub.callsFake(({ortb2Fragments}) => {
+            ortb2Fragments.global.value = 'new'
+          });
+          $$PREBID_GLOBAL$$.requestBids({ortb2: auctionFPD});
+          expect(configObj.getAnyConfig('ortb2').value).to.eql('old');
+        });
+
+        it('that cannot alter bidder config', () => {
+          configObj.setBidderConfig({
+            bidders: ['mockBidder'],
+            config: {
+              ortb2: {value: 'old'}
+            }
+          })
+          startAuctionStub.callsFake(({ortb2Fragments}) => {
+            ortb2Fragments.bidder.mockBidder.value = 'new';
+          })
+          $$PREBID_GLOBAL$$.requestBids({ortb2: auctionFPD});
+          expect(configObj.getBidderConfig().mockBidder.ortb2.value).to.eql('old');
+        })
 
         it('enriched through enrichFPD', () => {
           function enrich(next, fpd) {
@@ -3576,15 +3614,15 @@ describe('Unit: Prebid Module', function () {
       }
 
       Object.entries({
-        'analytics=true': {
+        'events=true': {
           mark(options = {}) {
-            $$PREBID_GLOBAL$$.markWinningBidAsUsed(Object.assign({analytics: true}, options))
+            $$PREBID_GLOBAL$$.markWinningBidAsUsed(Object.assign({events: true}, options))
           },
           checkBidWon() {
             sinon.assert.calledWith(events.emit, EVENTS.BID_WON, markedBid);
           }
         },
-        'analytics=false': {
+        'events=false': {
           mark(options = {}) {
             $$PREBID_GLOBAL$$.markWinningBidAsUsed(options)
           },
